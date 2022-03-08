@@ -46,7 +46,7 @@ def printAdversMapV(adversMapData):
                 printer += " - Chez le joueur "+str(j+1)+":  "
                 for k in range(len(adversMapData[i][j])):
                     printer += str(abc[adversMapData[i][j][k][0]])+str(adversMapData[i][j][k][1])+" "
-                    if adversMapData[i][j][k][2] != "-":
+                    if adversMapData[i][j][k][2] != "--":
                         printer += "touché, "
                     else:
                         printer +=  "à l'eau, "
