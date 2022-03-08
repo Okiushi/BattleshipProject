@@ -10,6 +10,8 @@ global window
 global mapData
 global mapSize
 global mapNumber
+global adversMapData
+global boatData
 
 global case_size
 global grid_size
@@ -21,6 +23,8 @@ window = Tk()
 mapData = []
 mapSize = 10
 mapNumber = 3
+adversMapData = []
+boatData = []
 
 case_size = 50
 grid_size = 10
@@ -29,8 +33,9 @@ cases = []
 #### ---- Interaction utilisateur
 
 # Attaquer une position ennemie
-def atq(map,posX,posY):
-    mapPosModif(map,posX,posY,mapPosRead(map,posX,posY)[0],X)
+def atq(user,map,posX,posY):
+    mapPosModif(map,posX,posY,mapPosRead(map,posX,posY)[0],"X")
+    adversMapData[user-1][map-1] += [[posX,posY,mapPosRead(map,posX,posY)[0],mapPosRead(map,posX,posY)[1]]]
 
 #### ---- Manipulation des maps
 
@@ -39,10 +44,13 @@ def creatmap():
     global mapData
     for i in range(mapNumber):
         mapData.append([])
+        adversMapData.append([])
+        for i2 in range(mapNumber):
+            adversMapData[i] += [[]]
         for j in range(mapSize):
             mapData[i] += [[]*mapSize]
             for k in range(mapSize):
-                mapData[i][j] += [["-","-"]]
+                mapData[i][j] += [["--","-"]]
 
 # Lire une position
 def mapPosRead(map,posX,posY):
@@ -54,11 +62,26 @@ def mapPosModif(map,posX,posY,modiftype,modifstatus):
 
 # Modifier une zone de position
 def mapZoneModif(map,posX1,posY1,posX2,posY2,modiftype,modifstatus):
-    for i in range(posX2-posX1+1):
-        for j in range(posY2-posY1+1):
-            mapPosModif(map,posX1+i,posY1+j,modiftype,modifstatus)
+    if posX2>posX1:
+        for i in range(posX2-posX1+1):
+            if posY2>posY1:
+                for j in range(posY2-posY1+1):
+                    mapPosModif(map,posX1+i,posY1+j,modiftype,modifstatus)
+            else:
+                for j in range(posY1-posY2+1):
+                    mapPosModif(map,posX1+i,posY2+j,modiftype,modifstatus)   
+    else:
+        for i in range(posX1-posX2+1):
+            if posY2>posY1:
+                for j in range(posY2-posY1+1):
+                    mapPosModif(map,posX2+i,posY1+j,modiftype,modifstatus)
+            else:
+                for j in range(posY1-posY2+1):
+                    mapPosModif(map,posX2+i,posY2+j,modiftype,modifstatus)  
 
+#### ----  Actualisation
 
+# Bientôt
 
 
 

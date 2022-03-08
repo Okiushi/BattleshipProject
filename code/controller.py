@@ -1,17 +1,27 @@
 from ihm import *
 
+# Afficheur présent en 0.0.1
+# newparty()
+# window.mainloop()
+
 # Exemple utilisant les derniers ajouts de la 0.0.2 :
 
-creatmap() #Initialise les cartes selon les paramètre défini
-mapZoneModif(1,5,3,5,7,"P","-") # Ajout d'un porte avion
-mapZoneModif(2,5,7,7,7,"S","-") # Ajout d'un porte sous-marin
-printMapData(mapData) # actualison l'afichage dans la console
-atq(2,5,7) # J1 attaque J2 en E7
-atq(1,3,8) # J2 attaque J1 en C8
-atq(2,5,4) # J1 attaque J2 en E4
-atq(1,2,7) # J2 attaque J1 en B7
-printMapData(mapData) # actualison l'afichage dans la console
+# Création de la base de donné des cartes des joueurs
+creatmap()
 
-# Afficheur présent en 0.0.1
-newparty()
-window.mainloop()
+# Ajout d'un bateau pour l'exemple
+mapZoneModif(1,5,3,5,7,"p1","-")
+mapZoneModif(2,5,7,7,7,"s1","-")
+mapZoneModif(3,6,4,6,8,"c1","-")
+
+# Attaque des joueurs pour l'exemple
+atq(1,2,5,7)
+atq(1,3,5,3)
+atq(2,1,5,4)
+atq(2,3,2,7)
+atq(3,1,8,4)
+atq(3,2,8,2)
+
+# Affichage pour voir ce qui s'est passé
+printAdversMapV(adversMapData)
+printMapData(mapData)
