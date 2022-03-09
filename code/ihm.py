@@ -19,3 +19,19 @@ def showplayscreen():
 
 def showmenuscreen():
     window.title('Battleship')
+    menubar = Menu(window)
+    window.config(menu=menubar)
+    menu_selection = Menu(menubar,tearoff=0)
+    menubar.add_cascade(label="Jouer", menu=menu_selection)
+
+    menu_selection.add_command(label="Standard contre l'IA ")
+    menu_selection.add_command(label="Standard contre un joueur")
+    menu_selection.add_command(label="Personalisé")
+
+
+    menu_settings= Menu(menubar,tearoff=0)
+    menubar.add_cascade(label= "Réglage", menu=menu_settings)
+    menu_stats= Menu(menubar,tearoff=0)
+    menubar.add_cascade(label= "Stats", menu=menu_stats)
+    menu_credit= Menu(menubar,tearoff=0)
+    menubar.add_cascade(label= "Support", menu=menu_credit)

@@ -1,8 +1,8 @@
 from ihm import *
 
 # Afficheur présent en 0.0.1
-# newparty()
-# window.mainloop()
+showmenuscreen()
+window.mainloop()
 
 # Exemple utilisant les derniers ajouts de la 0.0.2 :
 
