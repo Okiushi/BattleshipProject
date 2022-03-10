@@ -1,9 +1,5 @@
 from ihm import *
 
-# Afficheur présent en 0.0.1
-showmenuscreen()
-window.mainloop()
-
 # Exemple utilisant les derniers ajouts de la 0.0.2 :
 
 # Création de la base de donné des cartes des joueurs
@@ -22,15 +18,10 @@ atq(2,3,2,7)
 atq(3,1,8,4)
 atq(3,2,8,2)
 
-# Affichage pour voir ce qui s'est passé
-printMapData(mapData)
-
-# Coulon le seul bateau du joueur 2
+# Coulon le seul bateau du joueur 2 tient
 atq(1,2,6,7)
-atq(1,2,7,7)
+atq(3,2,7,7)
 
-# Verifier si le bateaux est censé couler et le mettre sur cette état si c'est le cas
-refreshDeath(2,"p1")
-
-# Affichage pour voir ce qui s'est passé
-printMapData(mapData)
+# Afficheur présent en 0.0.1
+battleship()
+app.mainloop()

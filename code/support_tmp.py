@@ -1,4 +1,4 @@
-# Reprise de la fopnction d'affichage de matrice pour nous aider à la visualisation dans la consol
+
 
 # Affichage d'une grille
 def printTab(M):
