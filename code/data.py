@@ -1,8 +1,8 @@
-#### ---- Importation des modules
+#### ---- Importation des modules du projet
 
 from tkinter import *
 import tkinter as tk
-from support_tmp import * # + un fichier temporaire pour l"aide au développement
+from tkinter import ttk # Pour une UI conforme au dernière version du système d'exploitations
 
 #### ---- Initalisation des variables global
 
@@ -19,19 +19,20 @@ global playerMap
 app = tk.Tk()
 mapData = []
 mapSize = 10
-mapNumber = 3
+mapNumber = 2
 adversMapData = []
 boatData = []
-playerMap = 2
+playerMap = 1
 
 #### ---- Interaction utilisateur
 
 # Attaquer une position ennemie
 def atq(user,map,posX,posY):
-    type = mapRead(map,posX,posY)[0]
-    mapData[map-1][posY-1][posX-1][1] = "X"
-    adversMapData[user-1][map-1] += [[posX,posY,type,mapRead(map,posX,posY)[1]]]
     Xcount = 0
+    type = mapRead(map,posX,posY)[0]
+    if mapData[map-1][posY-1][posX-1][1] != "D":
+        mapData[map-1][posY-1][posX-1][1] = "X"
+    adversMapData[user-1][map-1] += [[posX,posY,type,mapRead(map,posX,posY)[1]]]
     for i in range(len(mapData[map-1])):
         for j in range(len(mapData[map-1][i])):
             if mapRead(map,i,j)[1] == "X":
@@ -43,7 +44,7 @@ def atq(user,map,posX,posY):
 
 # Création des maps
 def creatmap():
-    global mapData
+    mapData.clear()
     for i in range(mapNumber):
         mapData.append([])
         adversMapData.append([])
