@@ -1,6 +1,7 @@
 # --- Imporations des données
 from data import *
 
+
 # --- Affectation des variables
 globalSize = 2
 case_size = 15
@@ -103,10 +104,34 @@ button_exit.place(height=50,width=50,relx=1,rely=1,x=-10,y=-10,anchor = SE)
 
 button_backToMainMenu = ttk.Button(settingsPage, text='Back',command=lambda:switch(mainMenuPage))
 button_backToMainMenu.place(height=15,width=30,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
-
+text_musique = Label(settingsPage,text="Musique",bg="black",fg="white",font='Helvetica')
+text_musique.place(height=50,width=125, x= 100,y=100)
+text_son = Label(settingsPage,text="Volume",bg="black",fg="white",font='Helvetica')
+text_son.place(height=50,width=125,x =100,y=200)
+text_son = Label(settingsPage,text="Langue",bg="black",fg="white",font='Helvetica')
+text_son.place(height=50,width=125,x =100,y=300)
+slider = Scale(settingsPage,from_=0, to=100,orient=HORIZONTAL,bd="4",length=300,relief=RIDGE,sliderrelief=GROOVE,sliderlength=22,troughcolor="white",bg="ivory")
+slider.place(x=300,y=200)
+# Valeur pour "Activer" => var1; valeur pour "Desactiver" => var2
+var1= IntVar()
+var2= IntVar()
+# Case Activer/Desctiver
+case_active = tk.Checkbutton(settingsPage, text='Activer',variable=var1, onvalue=1, offvalue=0)
+case_active.place(height=50,width=125,x=250,y=100)
+case_desactive= tk.Checkbutton(settingsPage, text='Desactiver',variable=var2, onvalue=1, offvalue=0)
+case_desactive.place(height=50,width=125,x=375,y=100)
+# Case Langue
+# Valeur pour "Activer" => var1; valeur pour "Desactiver" => var2
+var3= IntVar()
+var4= IntVar()
+case_francais = tk.Checkbutton(settingsPage, text='Français',variable=var3, onvalue=1, offvalue=0)
+case_francais.place(height=50,width=125,x=250,y=300)
+case_anglais= tk.Checkbutton(settingsPage, text='Anglais',variable=var4, onvalue=1, offvalue=0)
+case_anglais.place(height=50,width=125,x=375,y=300)
+"""
 text_commingSoon = Label(settingsPage,text="Comming soon",bg="black",fg="white")
 text_commingSoon.place(height=30, relwidth=1,relx = 0.5, rely = 0.5, anchor = CENTER)
-
+"""
 # Credits
 
 button_backToMainMenu = ttk.Button(creditsPage, text='Back',command=lambda:switch(mainMenuPage))
