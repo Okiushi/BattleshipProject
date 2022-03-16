@@ -1,12 +1,20 @@
 #### ---- Importation des modules du projet
 
+# Gestion des interface graphique
 from tkinter import *
 import tkinter as tk
-from tkinter import ttk # Pour une UI conforme au dernière version du système d'exploitations
+
+# Gestion des polices
+import tkinter.font as tkFont
+from tkinter.font import nametofont
+
+# Customisation graphique des widgets pour un GUI conforme au dernière version du système d'exploitations
+from tkinter import ttk
 
 #### ---- Initalisation des variables global
 
 global app
+global lang
 global mapData
 global mapSize
 global mapNumber
@@ -17,9 +25,10 @@ global playerMap
 #### ---- Affectation des variables global
 
 app = tk.Tk()
+lang = 1
 mapData = []
 mapSize = 10
-mapNumber = 2
+mapNumber = 3
 adversMapData = []
 boatData = []
 playerMap = 1
@@ -117,3 +126,14 @@ def mapZoneModifStatus(map,modifstatus,posX1,posY1,posX2,posY2):
                     mapPosModifStatus(map,modifstatus,posX2+i,posY2+j)  
                     
 # Voici le morceau de code qui convertira nos lettre en chiffre, il fontionne pour la majuscule et minuscul: " ord(posX.lower())-96 "
+
+# Gestion de la langue
+langDico = [
+            # Anglais
+            ["Play","Settings","Credit","Exit","Back","Main menu","CUSTOM","Comming soon","/// LAUNCH ///","Select a game mode"],
+
+            # Français
+            ["Jouer","Réglage","Crédit","Quitter","Retour","Menu principal","PERSONALISÉ","Prochainement","/// LANCER ///","Sélectionnez un mode de jeu"]]
+
+def lg(text):
+    return langDico[lang][langDico[1].index(text)]
