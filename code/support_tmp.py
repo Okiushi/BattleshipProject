@@ -36,17 +36,17 @@ def printMapDataV(mapData):
     print(printer)
 
 # Affichage vertical de la grilles des adversaires vu utilisateur 
-def printAdversMapV(adversMapData):
+def printAtqHistory(atqHistory):
     printer = "\n"
     abc = "ABCDEFGHIJ"
-    for i in range(len(adversMapData)):
+    for i in range(len(atqHistory)):
         printer += "Position connu du joueur "+str(i+1)+":\n"
-        for j in range(len(adversMapData[i])):
+        for j in range(len(atqHistory[i])):
             if j != i:
                 printer += " - Chez le joueur "+str(j+1)+":  "
-                for k in range(len(adversMapData[i][j])):
-                    printer += str(abc[adversMapData[i][j][k][0]])+str(adversMapData[i][j][k][1])+" "
-                    if adversMapData[i][j][k][2] != "--":
+                for k in range(len(atqHistory[i][j])):
+                    printer += str(abc[atqHistory[i][j][k][1]-1])+str(atqHistory[i][j][k][0])+" "
+                    if atqHistory[i][j][k][2] != "--":
                         printer += "touché, "
                     else:
                         printer +=  "à l'eau, "
