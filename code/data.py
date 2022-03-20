@@ -1,5 +1,4 @@
 #### ---- Importation des modules du projet
-
 from random import randint
 from support_tmp import *
 
@@ -7,25 +6,43 @@ from support_tmp import *
 
 #### ---- Affectation des variables global
 
+global gameMode
+global mapSize
+global mapNumber
+global playerMapSelect
+global gameDataBoat
+
 mapData = []
 atqHistory = []
 boatData = []
-gameDataBoat = []
+gameDataBoat = [["a1",5],["c1",4],["f1",3],["s1",3],["p1",2]]
+gameSettings = []
 
-lang = 1
+lang = 0
 mapSize = 10
 playerMapSelect = 1
-mapNumber = 1000
+mapNumber = 2
 gameMode = 0
+testAddBoat = 0
+
+gameSettings = [gameMode,mapSize,playerMapSelect,mapNumber]
 
 def gamePreset():
+    global gameMode
     global mapSize
     global mapNumber
     global playerMapSelect
     global gameDataBoat
-    mapSize = 10
-    mapNumber = 1000
-    playerMapSelect = 1
+
+    gameSettings[0] = 0
+    gameSettings[1] = 10
+    gameSettings[2] = 1
+    mapNumber = 2
+
+    gameMode = gameSettings[0]
+    mapSize = gameSettings[1]
+    mapNumber = mapNumber
+    playerMapSelect = gameSettings[2]
     gameDataBoat = [["a1",5],["c1",4],["f1",3],["s1",3],["p1",2]]
 
 #### ---- Interaction utilisateur
@@ -51,13 +68,11 @@ def addBoat(map,type,x,y,direction,size):
     else:
         x2 = x + size
         y2 = y
-
     if x>0 and x2<mapSize+1 and y>0 and y2<mapSize+1:
         for i in range(x,x2+1):
             for j in range(y,y2+1):
                 if mapRead(map,i,j)[0] != "--":
                     noBoat = 0
-
         if not type in boatData[map-1] and noBoat:
             mapZoneModifType(map,type,x,y,x2,y2)
             boatData[map-1] += [type]
@@ -69,7 +84,6 @@ def atq(user,map,posX,posY):
     if not [posX,posY,type,mapRead(map,posX,posY)[1]] in atqHistory[user-1][map-1]:
         atqHistory[user-1][map-1] += [[posX,posY,type,mapRead(map,posX,posY)[1]]]
     refreshAllDeaths()
-# mapRead(map,i,j)[1][0] == "X" and mapRead(map,i,j)[0] == type:
 
 def refreshAllDeaths():
     for map in range(len(mapData)):
@@ -82,14 +96,11 @@ def refreshAllDeaths():
             if counter >= BoatReadPos(map+1,boatData[map][boat])[0]:
                 mapZoneModifStatus(map+1,"DD",BoatReadPos(map+1,boatData[map][boat])[1],BoatReadPos(map+1,boatData[map][boat])[2],BoatReadPos(map+1,boatData[map][boat])[3],BoatReadPos(map+1,boatData[map][boat])[4])
 
-#### ---- Gestion des presets de party
-
-
 #### ---- Manipulation des maps
-
 
 # Création des maps
 def creatmap():
+    testAddBoat = 0
     mapData.clear()
     atqHistory.clear()
     boatData.clear()
@@ -189,4 +200,3 @@ def laucheGame():
     for i in range(mapNumber):
         if i != playerMapSelect:
             IA1creatMap(i)
-
