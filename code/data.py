@@ -15,67 +15,65 @@ global gameDataBoat
 mapData = []
 atqHistory = []
 boatData = []
-gameDataBoat = [["a1",5],["c1",4],["f1",3],["s1",3],["p1",2]]
+gameDataBoat = ["a","c","f","s","p"]
 gameSettings = []
 
-lang = 0
+lang = 1
 mapSize = 10
 playerMapSelect = 1
-mapNumber = 2
+mapNumber = 25
 gameMode = 0
 testAddBoat = 0
+lastBuildBoat = ""
 
 gameSettings = [gameMode,mapSize,playerMapSelect,mapNumber]
-
-def gamePreset():
-    global gameMode
-    global mapSize
-    global mapNumber
-    global playerMapSelect
-    global gameDataBoat
-
-    gameSettings[0] = 0
-    gameSettings[1] = 10
-    gameSettings[2] = 1
-    mapNumber = 2
-
-    gameMode = gameSettings[0]
-    mapSize = gameSettings[1]
-    mapNumber = mapNumber
-    playerMapSelect = gameSettings[2]
-    gameDataBoat = [["a1",5],["c1",4],["f1",3],["s1",3],["p1",2]]
 
 #### ---- Interaction utilisateur
 
 # Attaquer une position ennemie
-def addBoat(map,type,x,y,direction,size):
-    size -= 1
-    noBoat = 1
+def addBoat(map,type,x,y,direction):
+    global lastBuildBoat
+    if type == "a":
+        size = 4
+    if type == "c":
+        size = 3
+    if type == "f":
+        size = 2
+    if type == "s":
+        size = 2
+    if type == "p":
+        size = 1
     if direction == "N":
         x2 = x
-        y2 = y
-        y -= size
+        y2 = y + size//2
+        y -= size//2 + int(size%2)
     elif direction == "S":
         x2 = x
-        y2 = y + size
+        y2 = y + size//2 + int(size%2)
+        y -= size//2
     elif direction == "W":
-        x2 = x
-        x -= size
-        y2 = y
-    elif direction == "E":
-        x2 = x + size
-        y2 = y
+        x2 = x + size//2
+        x -= size//2 + int(size%2)
+        y2 = y 
     else:
-        x2 = x + size
+        x2 = x + size//2 + int(size%2)
         y2 = y
+        x -= size//2
+    noBoat = 1
     if x>0 and x2<mapSize+1 and y>0 and y2<mapSize+1:
         for i in range(x,x2+1):
             for j in range(y,y2+1):
                 if mapRead(map,i,j)[0] != "--":
                     noBoat = 0
         if not type in boatData[map-1] and noBoat:
-            mapZoneModifType(map,type,x,y,x2,y2)
-            boatData[map-1] += [type]
+            occurence = 0
+            while type+str(occurence) in boatData[map-1]:
+                occurence += 1
+            if type+str(occurence) not in boatData[map-1]:
+                mapZoneModifType(map,type+str(occurence),x,y,x2,y2)
+                boatData[map-1] += [type+str(occurence)]
+                lastBuildBoat = type+str(occurence)
+
 
 def atq(user,map,posX,posY):
     type = mapRead(map,posX,posY)[0]
@@ -179,7 +177,6 @@ def mapZoneModifStatus(map,modifstatus,posX1,posY1,posX2,posY2):
                     
 # Voici le morceau de code qui convertira nos lettre en chiffre, il fontionne pour la majuscule et minuscul: " ord(posX.lower())-96 "
 
-
 # Gestion de la langue
 def lg(text):
     return langDico[lang][langDico[1].index(text)]
@@ -192,9 +189,11 @@ langDico = [# Anglais
 
 def IA1creatMap(map):
     direction = "NSEW"
-    for boat in range(len(gameDataBoat)):
-        while not gameDataBoat[boat][0] in boatData[map-1]:
-            addBoat(map,gameDataBoat[boat][0],randint(1,mapSize),randint(1,mapSize),direction[randint(0,3)],gameDataBoat[boat][1])
+    testAddBoat = 0
+    while testAddBoat < len(gameDataBoat):
+        addBoat(map,gameDataBoat[testAddBoat],randint(1,mapSize),randint(1,mapSize),direction[randint(0,3)])
+        if testAddBoat < len(boatData[map-1]):
+            testAddBoat += 1
 
 def laucheGame():
     for i in range(mapNumber):

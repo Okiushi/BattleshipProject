@@ -1,4 +1,7 @@
-# --- Imporations des données
+
+# --- Importation des bibliothèque
+
+# Imporations des données
 from data import *
 
 # Gestion des interfaces graphiques
@@ -25,6 +28,10 @@ H = 450
 globalSize = 1
 ennemieMapSelect = 2
 buildBoatDirection = 0
+buildBoatSelected = ""
+mouseX = 0
+mousY = 0
+inBuildMap = False
 
 # --- Page
 window = Frame(app)
@@ -42,7 +49,7 @@ default_font = nametofont("TkDefaultFont")
 # --- Ajout des images
 
 # Frégate
-img_Fboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat.png").resize((30,150), Image.ANTIALIAS))
+img_Fboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat.png").resize((100//6,500//6), Image.ANTIALIAS))
 
 ### --- Action de boutton --- ###
 def setFullScreen(event):
@@ -76,12 +83,33 @@ def selectEnnemieMap(select):
         ennemieMapSelect -= 1
     refreshGUI()
 
-def changeBoatDirection():
+def changeBoatDirection(event):
     global buildBoatDirection
     if buildBoatDirection < 3:
         buildBoatDirection += 1
     else:
         buildBoatDirection = 0
+
+def changeInBuildMap(value):
+    global inBuildMap
+    inBuildMap = value
+
+def boatDataTypeCount(type,map):
+    count = 0
+    for i in range(len(boatData[map-1])):
+        if boatData[playerMapSelect-1][i][0] == type:
+            count += 1
+    return count
+
+def boatSelect(type):
+    global buildBoatSelected
+    global buildBoatDirection
+    buildBoatDirection = 0
+    if type != "":
+        if boatDataTypeCount(type,playerMapSelect) != gameDataBoat.count(type):
+            buildBoatSelected = type
+    else:
+        buildBoatSelected = ""
 
 def selectGameMode(mode):
     global gameMode
@@ -91,21 +119,34 @@ def selectGameMode(mode):
 def clickEnnemieMap(event):
     atq(playerMapSelect,ennemieMapSelect,event.x//(ennemieMap.winfo_width()//mapSize)+1,event.y//(ennemieMap.winfo_height()//mapSize)+1)
     for ennemi in range(2,mapNumber+1):
-        atq(ennemi,playerMapSelect,randint(1,mapSize),randint(1,mapSize))
+        if ennemi != playerMapSelect:
+            for atqMap in range(1,mapNumber+1):
+                if atqMap != ennemi:
+                    atq(ennemi,atqMap,randint(1,mapSize),randint(1,mapSize))
     refreshGUI()
 
 def clickBuild(event):
     global testAddBoat
+    global lastBuildBoat
     direction = "NESW"
-    if len(boatData[playerMapSelect-1]) < len(gameDataBoat) :
-        addBoat(playerMapSelect,gameDataBoat[testAddBoat][0],event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection],gameDataBoat[testAddBoat][1])
-        if gameDataBoat[testAddBoat][0] in boatData[playerMapSelect-1]:
-            testAddBoat += 1
-        refreshGUI()
+    if buildBoatSelected != "":
+        if len(boatData[playerMapSelect-1]) < len(gameDataBoat) and boatDataTypeCount(buildBoatSelected,playerMapSelect) != gameDataBoat.count(buildBoatSelected):
+            addBoat(playerMapSelect,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection])
+            if testAddBoat < len(boatData[playerMapSelect-1]):
+                testAddBoat += 1
+            refreshGUI()
+        boatSelect("")
 
-def autoRefreshGUI():
+def refreshLoop():
+    refreshMousePos()
     refreshGUI()
-    app.after(50,autoRefreshGUI)
+    app.after(50,refreshLoop)
+
+def refreshMousePos():
+    global mouseX
+    global mouseY
+    mouseX = app.winfo_pointerx() - app.winfo_rootx()
+    mouseY = app.winfo_pointery() - app.winfo_rooty()
 
 def refreshGUI():
     global titleStyle
@@ -116,26 +157,20 @@ def refreshGUI():
     globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
     titleStyle.configure(size=int(50*globalSize))
     default_font.configure(family="Arial",size=int(11*(globalSize*0.5+0.5)),weight=BOLD)
-    
+
     # PreParty
     if gameMode:
         text_selectGame.config(text=lg("Personalisé"))
-        text_selectGame.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.05, anchor = CENTER)
+        text_selectGame2.config(text=lg("Personalisé"))
     else:
         text_selectGame.config(text=lg("Standard"))
-        text_selectGame.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.05, anchor = CENTER)
+        text_selectGame2.config(text=lg("Standard"))
 
-    ennemieName.config(text="IA Player "+str(ennemieMapSelect))
-    ennemieName.place(height=30,width=50,relheight=0.01,relwidth=0.1,relx=0.52,rely=0.06,x=-10,y=10,anchor = N)
+    ennemieName.config(text="Player "+str(ennemieMapSelect))
+    ennemieName.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.5,rely=1,y=-10,anchor = S)
 
-    if len(boatData[playerMapSelect-1]) < len(gameDataBoat) :
-        text_selectBoat.config(text="Size :"+str(gameDataBoat[testAddBoat][1]))
-    else:
-        text_selectBoat.config(text="Let's go !")
-
-    direction = "NESW"
-    button_changeDirection.config(text=str(direction[buildBoatDirection]))
-
+    direction = ["Nord","Est","Sud","Ouest"]
+    text_changeDirection.config(text=str(direction[buildBoatDirection]))
 
     # Conbstruction de la carte
     boatBuildZone.delete("all")
@@ -150,8 +185,19 @@ def refreshGUI():
                 caseColor="lavender"
             else:
                 caseColor="steelBlue3"
-            cases_i.append(playerMapBuild.create_rectangle((j*(playerMapBuild.winfo_width()/mapSize)), (i*(playerMapBuild.winfo_height()/mapSize)), ((j+1)*(playerMapBuild.winfo_width()/mapSize)-2), ((i+1)*(playerMapBuild.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor,activeoutline="white",activewidth=1))
+            cases_i.append(playerMapBuild.create_rectangle((j*(playerMapBuild.winfo_width()/mapSize)), (i*(playerMapBuild.winfo_height()/mapSize)), ((j+1)*(playerMapBuild.winfo_width()/mapSize)-2), ((i+1)*(playerMapBuild.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor))
         cases.append(cases_i)
+
+    # Gestion des bateaux placer
+
+    # Fboat
+    if buildBoatSelected != "f" and boatDataTypeCount("f",playerMapSelect) != gameDataBoat.count("f") :
+        boatBuildZone.create_image(50,200,image=img_Fboat,tags="Fboat")
+    if buildBoatSelected == "f" and boatDataTypeCount("f",playerMapSelect) != gameDataBoat.count("f"):
+        if inBuildMap:
+            playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=img_Fboat,tags="FboatSelect")
+        else:
+            boatBuildZone.create_image(mouseX,mouseY,image=img_Fboat,tags="FboatSelect")
 
     # Party
     mapZone.place(relx = 0.5, rely = 0.5, relwidth = 1, relheight = 1,anchor = CENTER)
@@ -193,7 +239,7 @@ def refreshGUI():
                 caseColor="steelBlue3"
             cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor,activeoutline="white",activewidth=1*globalSize))
         cases.append(cases_i)
-    
+
     if mapNumber > 2:
         if ennemieMapSelect + 1 == playerMapSelect:
             button_nextMap.config(text="Player "+str(ennemieMapSelect+2))
@@ -205,17 +251,16 @@ def refreshGUI():
             button_backMap.config(text="Player "+str(ennemieMapSelect-1))
 
         if ennemieMapSelect < mapNumber and not (playerMapSelect == mapNumber and ennemieMapSelect+1 == mapNumber):
-            button_nextMap.place(height=30,width=50,relheight=0.025,relwidth=0.1,relx=0.9,rely=0.05,x=-10,y=10,anchor = NE)
+            button_nextMap.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.9,rely=1,y=-10,anchor = SE)
         else:
             button_nextMap.place_forget()
         if ennemieMapSelect > 1 and not (playerMapSelect == 1 and ennemieMapSelect-1 == 1):
-            button_backMap.place(height=30,width=50,relheight=0.025,relwidth=0.1,relx=0.1,rely=0.05,x=10,y=10)
+            button_backMap.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.1,rely=1,y=-10,anchor = SW)
         else:
             button_backMap.place_forget()
     else:
         button_nextMap.place_forget()
         button_backMap.place_forget()
-            
 
 text_gameTitle = Label(mainMenuPage,text="BATTLESHIP WARFARE",fg="black",font=titleStyle)
 text_gameTitle.place(relx = 0.5, rely = 0.45, anchor = S)
@@ -248,6 +293,7 @@ slider.place(x=300,y=200)
 # Valeur pour "Activer" => var1; valeur pour "Desactiver" => var2
 var1= IntVar()
 var2= IntVar()
+
 # Case Activer/Desctiver
 case_active = tk.Checkbutton(settingsPage, text='Activer',variable=var1, onvalue=1, offvalue=0)
 case_active.place(height=50,width=125,x=250,y=100)
@@ -276,7 +322,7 @@ text_commingSoon.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.5, anchor =
 text_selectGame = Label(selectPartyPage,text=lg("Sélectionnez un mode de jeu"),fg="black")
 text_selectGame.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.05, anchor = CENTER)
 
-button_selectIAGame = ttk.Button(selectPartyPage, text=lg("Standard").upper(),command=lambda:[gamePreset(),switch(prePartyPage),selectGameMode(0)])
+button_selectIAGame = ttk.Button(selectPartyPage, text=lg("Standard").upper(),command=lambda:[switch(prePartyPage),selectGameMode(0)])
 button_selectIAGame.place(relwidth=0.4, relheight=0.75,relx = 0.3, rely = 0.475, anchor = CENTER)
 
 button_selectCustomGame = ttk.Button(selectPartyPage, text=lg("Personalisé").upper(),command=lambda:[switch(prePartyPage),selectGameMode(1)])
@@ -293,30 +339,32 @@ boatBuildZone.place(relheight=1,relwidth=1,relx=0.5,rely=0.5,anchor=CENTER)
 playerMapBuild = Canvas(boatBuildZone,bg="steelBlue4",cursor="crosshair")
 
 text_selectGame = Label(prePartyPage,fg="black")
+text_selectGame.place(relheight=0.1,relwidth=0.2,relx = 0.5, rely = 0.05, anchor = CENTER)
+
 button_back = ttk.Button(prePartyPage, text=lg("Retour"),command=lambda:switch(selectPartyPage))
 button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
 
 button_launchGame = ttk.Button(prePartyPage, text=lg("/// LANCER ///"),command=lambda:[laucheGame(),switch(partyPage),refreshGUI()])
 button_launchGame.place(height=50,width=100,relheight=0.05,relwidth=0.1,relx=1,rely=1,x=-10,y=-10,anchor = SE)
 
-button_changeDirection = ttk.Button(prePartyPage, text="Orientation",command=changeBoatDirection)
-button_changeDirection.place(height=30,width=30,relheight=0.025,relwidth=0.025,relx=0.1,rely=0.6,x=10,y=-10,anchor = SW)
-
-text_selectBoat = Label(prePartyPage,fg="black")
-text_selectBoat.place(relx=0.1,rely=0.5,x=10,y=-10,anchor = SW)
-
-
+text_changeDirection = ttk.Label(prePartyPage, text="Orientation")
+text_changeDirection.place(height=30,width=30,relheight=0.025,relwidth=0.025,relx=0.1,rely=0.8,x=10,y=-10,anchor = SW)
+        
 # Party
 
 mapZone = Frame(partyPage)
 mapZoneUser = Frame(mapZone)
 mapZoneEnnemie = Frame(mapZone)
 playerMap = Canvas(mapZoneUser,bg="steelBlue4")
-ennemieMap = Canvas(mapZoneEnnemie,bg="steelBlue4", highlightcolor="white",cursor="crosshair")
-ennemieName = Label(mapZoneEnnemie)
+ennemieMap = Canvas(mapZoneEnnemie,bg="steelBlue4", highlightcolor="red",cursor="crosshair")
+
+text_selectGame2 = Label(partyPage,fg="black")
+text_selectGame2.place(relheight=0.1,relwidth=0.2,relx = 0.5, rely = 0.05, anchor = CENTER)
 
 button_backToMainMenu = ttk.Button(partyPage, text=lg("Menu principal"),command=lambda:switch(mainMenuPage))
 button_backToMainMenu.place(height=30,width=75,relheight=0.025,relwidth=0.1,relx=0,rely=1,x=10,y=-10,anchor = SW)
+
+ennemieName = Label(mapZoneEnnemie)
 
 button_nextMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect+1),command=lambda:selectEnnemieMap(1))
 button_backMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect-1),command=lambda:selectEnnemieMap(0))
