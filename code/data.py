@@ -1,5 +1,12 @@
 #### ---- Importation des modules du projet
+
+# Prise en charge de séléction aléatoire
 from random import randint
+
+# Import des données stocké
+import json
+
+# Fonction de diagnostique pour le developpement
 from support_tmp import *
 
 #### ---- Initalisation des variables global
@@ -17,11 +24,12 @@ atqHistory = []
 boatData = []
 gameDataBoat = ["a","c","f","s","p"]
 gameSettings = []
+allBoatType = ["a","c","f","s","p"]
 
-lang = 1
+lang = 5
 mapSize = 10
 playerMapSelect = 1
-mapNumber = 25
+mapNumber = 2
 gameMode = 0
 testAddBoat = 0
 lastBuildBoat = ""
@@ -74,6 +82,9 @@ def addBoat(map,type,x,y,direction):
                 boatData[map-1] += [type+str(occurence)]
                 lastBuildBoat = type+str(occurence)
 
+def removeBoat(map,type):
+    mapZoneModifType(map,"--",BoatReadPos(map,type)[1],BoatReadPos(map,type)[2],BoatReadPos(map,type)[3],BoatReadPos(map,type)[4])
+    boatData[map-1].remove(type)
 
 def atq(user,map,posX,posY):
     type = mapRead(map,posX,posY)[0]
@@ -175,6 +186,13 @@ def mapZoneModifStatus(map,modifstatus,posX1,posY1,posX2,posY2):
                 for j in range(posY1-posY2+1):
                     mapPosModifStatus(map,modifstatus,posX2+i,posY2+j)  
                     
+def boatDataTypeCount(type,map):
+    count = 0
+    for i in range(len(boatData[map-1])):
+        if boatData[playerMapSelect-1][i][0] == type:
+            count += 1
+    return count
+
 # Voici le morceau de code qui convertira nos lettre en chiffre, il fontionne pour la majuscule et minuscul: " ord(posX.lower())-96 "
 
 # Gestion de la langue
@@ -183,9 +201,21 @@ def lg(text):
 
 langDico = [# Anglais
             ["Play","Settings","Credit","Exit","Back","Main menu","Standard","Custom","Comming soon","/// LAUNCH ///","Select a game mode","Next","Back"],
-
             # Français
-            ["Jouer","Réglage","Crédit","Quitter","Retour","Menu principal","Standard","Personalisé","Prochainement","/// LANCER ///","Sélectionnez un mode de jeu","Suivant","Précédent"]]
+            ["Jouer","Réglage","Crédit","Quitter","Retour","Menu principal","Standard","Personnalisé","Prochainement","/// LANCER ///","Sélectionnez un mode de jeu","Suivant","Précédent"],
+            # Allemand
+            ["Spielen", "Einstellungen", "Guthaben", "Beenden", "Zurück", "Hauptmenü", "Standard", "Benutzerdefiniert", "Demnächst","/// LANCER ///", "Spielmodus wählen", "Weiter", "Zurück"],
+            # Espagnol
+            ["Jugar", "Ajustes", "Créditos", "Salir", "Atrás", "Menú principal", "Estándar", "Personalizado", "Siguiente","/// Lanza ///", "Selecciona un modo de juego", "Siguiente", "Anterior"],
+            # Portugais
+            ["Jogar", "Definir", "Crédito", "Sair", "Voltar", "Menu principal", "Padrão", "Personalizado", "Próximo","/// ALMOÇO //", "Seleccionar um modo de jogo", "Próximo", "Anterior"],
+            # Japonais
+            ["再生", "設定", "クレジット", "終了", "戻る", "メインメニュー", "標準", "カスタム", "近日公開", "/// START ///", "ゲームモードを選択してください","「次へ」","「前へ」"],
+            # Coréen
+            ["재생","설정","크레딧","종료","뒤로","주 메뉴","표준","사용자 지정","출시 예정","/// 시작 ///"," 게임 모드 선택","다음","이전"],
+            # Chinois
+            ["播放", "设置", "积分", "退出", "返回", "主菜单", "标准", "自定义", "下一步", "/// LAUNCH ///", "选择一个游戏模式", "下一步", "上一步"]
+            ]
 
 def IA1creatMap(map):
     direction = "NSEW"
@@ -194,8 +224,3 @@ def IA1creatMap(map):
         addBoat(map,gameDataBoat[testAddBoat],randint(1,mapSize),randint(1,mapSize),direction[randint(0,3)])
         if testAddBoat < len(boatData[map-1]):
             testAddBoat += 1
-
-def laucheGame():
-    for i in range(mapNumber):
-        if i != playerMapSelect:
-            IA1creatMap(i)

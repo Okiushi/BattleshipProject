@@ -1,4 +1,3 @@
-
 # --- Importation des bibliothèque
 
 # Imporations des données
@@ -16,7 +15,7 @@ from tkinter.font import *
 import tkinter.font as tkFont
 
 # Gestion des images
-from PIL import ImageTk, Image 
+from PIL import ImageTk, Image
 
 # --- Affectation des variables
 app = tk.Tk()
@@ -49,9 +48,19 @@ default_font = nametofont("TkDefaultFont")
 # --- Ajout des images
 
 # Frégate
-img_Fboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat.png").resize((100//6,500//6), Image.ANTIALIAS))
+img_Aboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
+img_Cboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
+
+img_Fboat_N = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
+img_Fboat_E = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_E.png").resize((500//6,100//6), Image.ANTIALIAS))
+img_Fboat_S = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_S.png").resize((100//6,500//6), Image.ANTIALIAS))
+img_Fboat_W = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_W.png").resize((500//6,100//6), Image.ANTIALIAS))
+
+img_Sboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
+img_Pboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
 
 ### --- Action de boutton --- ###
+
 def setFullScreen(event):
     global fullScreen
     if fullScreen :
@@ -59,6 +68,13 @@ def setFullScreen(event):
     else:
         fullScreen = True
     app.attributes("-fullscreen", fullScreen) 
+
+def laucheGame():
+    for i in range(mapNumber):
+        if i != playerMapSelect:
+            IA1creatMap(i)
+    switch(partyPage)
+    refreshGUI()
 
 # Fonction d'action de fenêtre
 def switch(frame):
@@ -94,22 +110,14 @@ def changeInBuildMap(value):
     global inBuildMap
     inBuildMap = value
 
-def boatDataTypeCount(type,map):
-    count = 0
-    for i in range(len(boatData[map-1])):
-        if boatData[playerMapSelect-1][i][0] == type:
-            count += 1
-    return count
-
 def boatSelect(type):
     global buildBoatSelected
     global buildBoatDirection
     buildBoatDirection = 0
-    if type != "":
-        if boatDataTypeCount(type,playerMapSelect) != gameDataBoat.count(type):
-            buildBoatSelected = type
-    else:
-        buildBoatSelected = ""
+
+    buildBoatSelected = ""
+    if boatDataTypeCount(type,playerMapSelect) != gameDataBoat.count(type):
+        buildBoatSelected = type
 
 def selectGameMode(mode):
     global gameMode
@@ -128,14 +136,20 @@ def clickEnnemieMap(event):
 def clickBuild(event):
     global testAddBoat
     global lastBuildBoat
+    map = playerMapSelect
     direction = "NESW"
     if buildBoatSelected != "":
-        if len(boatData[playerMapSelect-1]) < len(gameDataBoat) and boatDataTypeCount(buildBoatSelected,playerMapSelect) != gameDataBoat.count(buildBoatSelected):
-            addBoat(playerMapSelect,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection])
-            if testAddBoat < len(boatData[playerMapSelect-1]):
+        if len(boatData[map-1]) < len(gameDataBoat) and boatDataTypeCount(buildBoatSelected,map) != gameDataBoat.count(buildBoatSelected):
+            addBoat(map,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection])
+            if testAddBoat < len(boatData[map-1]):
                 testAddBoat += 1
             refreshGUI()
         boatSelect("")
+    else:
+        type = mapRead(map,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1)[0]
+        if type != "--":
+            removeBoat(map,type)
+            boatSelect(type[0])
 
 def refreshLoop():
     refreshMousePos()
@@ -160,8 +174,8 @@ def refreshGUI():
 
     # PreParty
     if gameMode:
-        text_selectGame.config(text=lg("Personalisé"))
-        text_selectGame2.config(text=lg("Personalisé"))
+        text_selectGame.config(text=lg("Personnalisé"))
+        text_selectGame2.config(text=lg("Personnalisé"))
     else:
         text_selectGame.config(text=lg("Standard"))
         text_selectGame2.config(text=lg("Standard"))
@@ -191,13 +205,60 @@ def refreshGUI():
     # Gestion des bateaux placer
 
     # Fboat
-    if buildBoatSelected != "f" and boatDataTypeCount("f",playerMapSelect) != gameDataBoat.count("f") :
-        boatBuildZone.create_image(50,200,image=img_Fboat,tags="Fboat")
-    if buildBoatSelected == "f" and boatDataTypeCount("f",playerMapSelect) != gameDataBoat.count("f"):
-        if inBuildMap:
-            playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=img_Fboat,tags="FboatSelect")
+    for type in range(len(allBoatType)):
+        if allBoatType[type] == "a":
+            imgSelect = img_Fboat_N
+            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
+                imgSelect = img_Fboat_E
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
+                imgSelect = img_Fboat_S
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
+                imgSelect = img_Fboat_W
+        elif allBoatType[type] == "c":
+            imgSelect = img_Fboat_N
+            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
+                imgSelect = img_Fboat_E
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
+                imgSelect = img_Fboat_S
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
+                imgSelect = img_Fboat_W
+        elif allBoatType[type] == "f":
+            imgSelect = img_Fboat_N
+            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
+                imgSelect = img_Fboat_E
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
+                imgSelect = img_Fboat_S
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
+                imgSelect = img_Fboat_W
+        elif allBoatType[type] == "s":
+            imgSelect = img_Fboat_N
+            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
+                imgSelect = img_Fboat_E
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
+                imgSelect = img_Fboat_S
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
+                imgSelect = img_Fboat_W
         else:
-            boatBuildZone.create_image(mouseX,mouseY,image=img_Fboat,tags="FboatSelect")
+            imgSelect = img_Fboat_N
+            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
+                imgSelect = img_Fboat_E
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
+                imgSelect = img_Fboat_S
+            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
+                imgSelect = img_Fboat_W
+        if buildBoatSelected == allBoatType[type] and boatDataTypeCount(allBoatType[type],playerMapSelect) != gameDataBoat.count(allBoatType[type]):
+            if inBuildMap:
+                if buildBoatSelected == "c" or buildBoatSelected == "p":
+                    if buildBoatDirection == 0 or buildBoatDirection == 2:
+                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+                    else:
+                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+                else:
+                    playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+            else:
+                boatBuildZone.create_image(mouseX,mouseY,image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+        elif buildBoatSelected != allBoatType[type] and boatDataTypeCount(allBoatType[type],playerMapSelect) != gameDataBoat.count(allBoatType[type]):
+            boatBuildZone.create_image(30*(type+1),200,image=imgSelect,tags=str(allBoatType[type])+"Boat")
 
     # Party
     mapZone.place(relx = 0.5, rely = 0.5, relwidth = 1, relheight = 1,anchor = CENTER)
@@ -325,7 +386,7 @@ text_selectGame.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.05, anchor =
 button_selectIAGame = ttk.Button(selectPartyPage, text=lg("Standard").upper(),command=lambda:[switch(prePartyPage),selectGameMode(0)])
 button_selectIAGame.place(relwidth=0.4, relheight=0.75,relx = 0.3, rely = 0.475, anchor = CENTER)
 
-button_selectCustomGame = ttk.Button(selectPartyPage, text=lg("Personalisé").upper(),command=lambda:[switch(prePartyPage),selectGameMode(1)])
+button_selectCustomGame = ttk.Button(selectPartyPage, text=lg("Personnalisé").upper(),command=lambda:[switch(prePartyPage),selectGameMode(1)])
 button_selectCustomGame.place(relwidth=0.4, relheight=0.75,relx = 0.7, rely = 0.475, anchor = CENTER)
 
 button_back = ttk.Button(selectPartyPage, text=lg("Retour"),command=lambda:switch(mainMenuPage))
@@ -344,7 +405,7 @@ text_selectGame.place(relheight=0.1,relwidth=0.2,relx = 0.5, rely = 0.05, anchor
 button_back = ttk.Button(prePartyPage, text=lg("Retour"),command=lambda:switch(selectPartyPage))
 button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
 
-button_launchGame = ttk.Button(prePartyPage, text=lg("/// LANCER ///"),command=lambda:[laucheGame(),switch(partyPage),refreshGUI()])
+button_launchGame = ttk.Button(prePartyPage, text=lg("/// LANCER ///"),command=laucheGame)
 button_launchGame.place(height=50,width=100,relheight=0.05,relwidth=0.1,relx=1,rely=1,x=-10,y=-10,anchor = SE)
 
 text_changeDirection = ttk.Label(prePartyPage, text="Orientation")
@@ -356,7 +417,7 @@ mapZone = Frame(partyPage)
 mapZoneUser = Frame(mapZone)
 mapZoneEnnemie = Frame(mapZone)
 playerMap = Canvas(mapZoneUser,bg="steelBlue4")
-ennemieMap = Canvas(mapZoneEnnemie,bg="steelBlue4", highlightcolor="red",cursor="crosshair")
+ennemieMap = Canvas(mapZoneEnnemie,bg="steelBlue4",cursor="crosshair")
 
 text_selectGame2 = Label(partyPage,fg="black")
 text_selectGame2.place(relheight=0.1,relwidth=0.2,relx = 0.5, rely = 0.05, anchor = CENTER)
