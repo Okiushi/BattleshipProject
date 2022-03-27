@@ -26,11 +26,15 @@ W  = 800
 H = 450
 globalSize = 1
 ennemieMapSelect = 2
-buildBoatDirection = 0
+buildBoatDirection = 1
 buildBoatSelected = ""
 mouseX = 0
 mousY = 0
 inBuildMap = False
+inEnnemieMap = False
+Hz = 30
+ennemieMapAtq = 2
+openTime = 0
 
 # --- Page
 window = Frame(app)
@@ -47,17 +51,127 @@ default_font = nametofont("TkDefaultFont")
 
 # --- Ajout des images
 
-# Frégate
-img_Aboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
-img_Cboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
+img_Aboat_N_Source = Image.open("../gui/image/Aboat_N.png")
+img_Aboat_E_Source = Image.open("../gui/image/Aboat_E.png")
+img_Aboat_S_Source = Image.open("../gui/image/Aboat_S.png")
+img_Aboat_W_Source = Image.open("../gui/image/Aboat_W.png")
 
-img_Fboat_N = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
-img_Fboat_E = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_E.png").resize((500//6,100//6), Image.ANTIALIAS))
-img_Fboat_S = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_S.png").resize((100//6,500//6), Image.ANTIALIAS))
-img_Fboat_W = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_W.png").resize((500//6,100//6), Image.ANTIALIAS))
+img_Cboat_N_Source = Image.open("../gui/image/Cboat_N.png")
+img_Cboat_E_Source = Image.open("../gui/image/Cboat_E.png")
+img_Cboat_S_Source = Image.open("../gui/image/Cboat_S.png")
+img_Cboat_W_Source = Image.open("../gui/image/Cboat_W.png")
 
-img_Sboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
-img_Pboat = ImageTk.PhotoImage(Image.open("../gui/image/Fboat_N.png").resize((100//6,500//6), Image.ANTIALIAS))
+img_Fboat_N_Source = Image.open("../gui/image/Fboat_N.png")
+img_Fboat_E_Source = Image.open("../gui/image/Fboat_E.png")
+img_Fboat_S_Source = Image.open("../gui/image/Fboat_S.png")
+img_Fboat_W_Source = Image.open("../gui/image/Fboat_W.png")
+
+img_Sboat_N_Source = Image.open("../gui/image/Sboat_N.png")
+img_Sboat_E_Source = Image.open("../gui/image/Sboat_E.png")
+img_Sboat_S_Source = Image.open("../gui/image/Sboat_S.png")
+img_Sboat_W_Source = Image.open("../gui/image/Sboat_W.png")
+
+img_Pboat_N_Source = Image.open("../gui/image/Pboat_N.png")
+img_Pboat_E_Source = Image.open("../gui/image/Pboat_E.png")
+img_Pboat_S_Source = Image.open("../gui/image/Pboat_S.png")
+img_Pboat_W_Source = Image.open("../gui/image/Pboat_W.png")
+
+def refreshImg():
+    global img_Aboat_N
+    global img_Aboat_E
+    global img_Aboat_S
+    global img_Aboat_W
+
+    global img_Cboat_N
+    global img_Cboat_E
+    global img_Cboat_S
+    global img_Cboat_W
+
+    global img_Fboat_N
+    global img_Fboat_E
+    global img_Fboat_S
+    global img_Fboat_W
+
+    global img_Sboat_N
+    global img_Sboat_E
+    global img_Sboat_S
+    global img_Sboat_W
+
+    global img_Pboat_N
+    global img_Pboat_E
+    global img_Pboat_S
+    global img_Pboat_W
+
+    img_Aboat_N = ImageTk.PhotoImage(img_Aboat_N_Source.resize((int(400//13*globalSize),int(2000//13*globalSize)), Image.ANTIALIAS))
+    img_Aboat_E = ImageTk.PhotoImage(img_Aboat_E_Source.resize((int(1000//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+    img_Aboat_S = ImageTk.PhotoImage(img_Aboat_S_Source.resize((int(200//7*globalSize),int(1000//7*globalSize)), Image.ANTIALIAS))
+    img_Aboat_W = ImageTk.PhotoImage(img_Aboat_W_Source.resize((int(1000//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+
+    img_Cboat_N = ImageTk.PhotoImage(img_Cboat_N_Source.resize((int(200//7*globalSize),int(800//7*globalSize)), Image.ANTIALIAS))
+    img_Cboat_E = ImageTk.PhotoImage(img_Cboat_E_Source.resize((int(800//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+    img_Cboat_S = ImageTk.PhotoImage(img_Cboat_S_Source.resize((int(200//7*globalSize),int(800//7*globalSize)), Image.ANTIALIAS))
+    img_Cboat_W = ImageTk.PhotoImage(img_Cboat_W_Source.resize((int(800//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+
+    img_Fboat_N = ImageTk.PhotoImage(img_Fboat_N_Source.resize((int(200//7*globalSize),int(600//7*globalSize)), Image.ANTIALIAS))
+    img_Fboat_E = ImageTk.PhotoImage(img_Fboat_E_Source.resize((int(600//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+    img_Fboat_S = ImageTk.PhotoImage(img_Fboat_S_Source.resize((int(200//7*globalSize),int(600//7*globalSize)), Image.ANTIALIAS))
+    img_Fboat_W = ImageTk.PhotoImage(img_Fboat_W_Source.resize((int(600//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+
+    img_Sboat_N = ImageTk.PhotoImage(img_Sboat_N_Source.resize((int(200//7*globalSize),int(600//7*globalSize)), Image.ANTIALIAS))
+    img_Sboat_E = ImageTk.PhotoImage(img_Sboat_E_Source.resize((int(600//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+    img_Sboat_S = ImageTk.PhotoImage(img_Sboat_S_Source.resize((int(200//7*globalSize),int(600//7*globalSize)), Image.ANTIALIAS))
+    img_Sboat_W = ImageTk.PhotoImage(img_Sboat_W_Source.resize((int(600//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+
+    img_Pboat_N = ImageTk.PhotoImage(img_Pboat_N_Source.resize((int(200//7*globalSize),int(400//7*globalSize)), Image.ANTIALIAS))
+    img_Pboat_E = ImageTk.PhotoImage(img_Pboat_E_Source.resize((int(400//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+    img_Pboat_S = ImageTk.PhotoImage(img_Pboat_S_Source.resize((int(200//7*globalSize),int(400//7*globalSize)), Image.ANTIALIAS))
+    img_Pboat_W = ImageTk.PhotoImage(img_Pboat_W_Source.resize((int(400//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
+
+def finfBoatImg(type,direction):
+    orientation = "NESW"
+    if not isinstance(direction, int):
+        direction = orientation.index(direction) 
+    if type == "a":
+            imgSelect = img_Aboat_E
+            if direction == 0:
+                imgSelect = img_Aboat_N
+            elif direction == 2:
+                imgSelect = img_Aboat_S
+            elif direction == 3:
+                imgSelect = img_Aboat_W
+    elif type == "c":
+        imgSelect = img_Cboat_E
+        if direction == 0:
+            imgSelect = img_Cboat_N
+        elif direction == 2:
+            imgSelect = img_Cboat_S
+        elif direction == 3:
+            imgSelect = img_Cboat_W
+    elif type == "f":
+        imgSelect = img_Fboat_E
+        if direction == 0:
+            imgSelect = img_Fboat_N
+        elif direction == 2:
+            imgSelect = img_Fboat_S
+        elif direction == 3:
+            imgSelect = img_Fboat_W
+    elif type == "s":
+        imgSelect = img_Sboat_E
+        if direction == 0:
+            imgSelect = img_Sboat_N
+        elif direction == 2:
+            imgSelect = img_Sboat_S
+        elif direction == 3:
+            imgSelect = img_Sboat_W
+    else:
+        imgSelect = img_Pboat_E
+        if direction == 0:
+            imgSelect = img_Pboat_N
+        elif direction == 2:
+            imgSelect = img_Pboat_S
+        elif direction == 3:
+            imgSelect = img_Pboat_W
+    return imgSelect
 
 ### --- Action de boutton --- ###
 
@@ -68,6 +182,7 @@ def setFullScreen(event):
     else:
         fullScreen = True
     app.attributes("-fullscreen", fullScreen) 
+    refreshGUI()
 
 def laucheGame():
     for i in range(mapNumber):
@@ -82,6 +197,7 @@ def switch(frame):
         widget.pack_forget()
     window.pack(expand = 1, fill =BOTH)
     frame.pack(expand = 1, fill =BOTH)
+    refreshGUI()
 
 # Redimentionnement
 
@@ -99,25 +215,56 @@ def selectEnnemieMap(select):
         ennemieMapSelect -= 1
     refreshGUI()
 
+def timer():
+    global openTime
+    openTime += 1
+    refreshImg()
+    app.after(1000,timer)
+
 def changeBoatDirection(event):
     global buildBoatDirection
-    if buildBoatDirection < 3:
-        buildBoatDirection += 1
-    else:
-        buildBoatDirection = 0
+    if not buildBoatSelected == "":
+        if buildBoatDirection < 3:
+            buildBoatDirection += 1
+        else:
+            buildBoatDirection = 0
 
-def changeInBuildMap(value):
+def setInBuildMap(value):
     global inBuildMap
     inBuildMap = value
 
-def boatSelect(type):
+def setInEnnemieMap(value):
+    global inEnnemieMap
+    inEnnemieMap = value
+
+def boatImgInMap(mapGui,map,hideBoat):
+    for i in range(len(boatGuiData[map-1])):
+        imgSelect = finfBoatImg(boatGuiData[map-1][i][0][0],boatGuiData[map-1][i][3])
+        if not hideBoat or hideBoat and mapRead(map,boatGuiData[map-1][i][1],boatGuiData[map-1][i][2])[1] == "DD":
+            if boatGuiData[map-1][i][0][0] == "c" or boatGuiData[map-1][i][0][0] == "p":
+                if boatGuiData[map-1][i][3] == "N":
+                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/mapSize))-(mapGui.winfo_width()/mapSize/2), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/mapSize))-(mapGui.winfo_height()/mapSize),image=imgSelect)
+                elif boatGuiData[map-1][i][3] == "E":
+                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/mapSize)), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/mapSize))-(mapGui.winfo_height()/mapSize/2),image=imgSelect)
+                elif boatGuiData[map-1][i][3] == "S":
+                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/mapSize))-(mapGui.winfo_width()/mapSize/2), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/mapSize)),image=imgSelect)
+                else:
+                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/mapSize))-(mapGui.winfo_width()/mapSize), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/mapSize))-(mapGui.winfo_height()/mapSize/2),image=imgSelect)
+            else:
+                mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/mapSize))-(mapGui.winfo_width()/mapSize/2), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/mapSize))-(mapGui.winfo_height()/mapSize/2),image=imgSelect)
+
+def boatSelect(type,direction,forceSelect):
     global buildBoatSelected
     global buildBoatDirection
-    buildBoatDirection = 0
-
+    orientation = "NESW"
     buildBoatSelected = ""
-    if boatDataTypeCount(type,playerMapSelect) != gameDataBoat.count(type):
+    buildBoatDirection = 1
+    if boatDataTypeCount(type,playerMapSelect) != gameDataBoat.count(type) or forceSelect:
         buildBoatSelected = type
+        if isinstance(direction, int):
+            buildBoatDirection = direction
+        else:
+            buildBoatDirection = orientation.index(direction)
 
 def selectGameMode(mode):
     global gameMode
@@ -140,21 +287,33 @@ def clickBuild(event):
     direction = "NESW"
     if buildBoatSelected != "":
         if len(boatData[map-1]) < len(gameDataBoat) and boatDataTypeCount(buildBoatSelected,map) != gameDataBoat.count(buildBoatSelected):
-            addBoat(map,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection])
+            if buildBoatSelected == "c" or buildBoatSelected == "p":
+                    if buildBoatDirection == 0:
+                        addBoat(map,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+2,direction[buildBoatDirection])
+                    elif buildBoatDirection == 3:
+                        addBoat(map,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+2,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection])
+                    else:
+                        addBoat(map,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection])
+            else:
+                addBoat(map,buildBoatSelected,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1,direction[buildBoatDirection])
             if testAddBoat < len(boatData[map-1]):
                 testAddBoat += 1
             refreshGUI()
-        boatSelect("")
+        boatSelect("",1,0)
     else:
         type = mapRead(map,event.x//(playerMapBuild.winfo_width()//mapSize)+1,event.y//(playerMapBuild.winfo_height()//mapSize)+1)[0]
         if type != "--":
+            for i in range(len(boatGuiData[map-1])):
+                if boatGuiData[map-1][i][0] == type:
+                    boatSelect(type[0],boatGuiData[map-1][i][3],True)
             removeBoat(map,type)
-            boatSelect(type[0])
 
-def refreshLoop():
+def guiloop():
+    global globalSize
+    globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
     refreshMousePos()
     refreshGUI()
-    app.after(50,refreshLoop)
+    app.after(int((1/(Hz))*1000),guiloop)
 
 def refreshMousePos():
     global mouseX
@@ -164,11 +323,9 @@ def refreshMousePos():
 
 def refreshGUI():
     global titleStyle
-    global globalSize
     global buildBoatDirection
 
     # AllPage
-    globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
     titleStyle.configure(size=int(50*globalSize))
     default_font.configure(family="Arial",size=int(11*(globalSize*0.5+0.5)),weight=BOLD)
 
@@ -183,82 +340,48 @@ def refreshGUI():
     ennemieName.config(text="Player "+str(ennemieMapSelect))
     ennemieName.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.5,rely=1,y=-10,anchor = S)
 
-    direction = ["Nord","Est","Sud","Ouest"]
-    text_changeDirection.config(text=str(direction[buildBoatDirection]))
-
-    # Conbstruction de la carte
     boatBuildZone.delete("all")
 
     playerMapBuild.place(width = 300*globalSize, height = 300*globalSize,relx = 0.5, rely = 0.5, anchor = CENTER)
     playerMapBuild.delete("all")
+
+    # Affichage des cases
     cases = []
     for i in range(mapSize):
         cases_i=[]
         for j in range(mapSize):
             if mapRead(playerMapSelect,j+1,i+1)[0] != "--":
-                caseColor="lavender"
-            else:
                 caseColor="steelBlue3"
+            else:
+                caseColor="steelBlue3" 
             cases_i.append(playerMapBuild.create_rectangle((j*(playerMapBuild.winfo_width()/mapSize)), (i*(playerMapBuild.winfo_height()/mapSize)), ((j+1)*(playerMapBuild.winfo_width()/mapSize)-2), ((i+1)*(playerMapBuild.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor))
         cases.append(cases_i)
 
-    # Gestion des bateaux placer
-
-    # Fboat
+    # Affichage des bateaux
+    boatImgInMap(playerMapBuild,playerMapSelect,False)
+    
     for type in range(len(allBoatType)):
-        if allBoatType[type] == "a":
-            imgSelect = img_Fboat_N
-            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
-                imgSelect = img_Fboat_E
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
-                imgSelect = img_Fboat_S
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
-                imgSelect = img_Fboat_W
-        elif allBoatType[type] == "c":
-            imgSelect = img_Fboat_N
-            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
-                imgSelect = img_Fboat_E
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
-                imgSelect = img_Fboat_S
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
-                imgSelect = img_Fboat_W
-        elif allBoatType[type] == "f":
-            imgSelect = img_Fboat_N
-            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
-                imgSelect = img_Fboat_E
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
-                imgSelect = img_Fboat_S
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
-                imgSelect = img_Fboat_W
-        elif allBoatType[type] == "s":
-            imgSelect = img_Fboat_N
-            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
-                imgSelect = img_Fboat_E
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
-                imgSelect = img_Fboat_S
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
-                imgSelect = img_Fboat_W
+        if buildBoatSelected == allBoatType[type]:
+            imgSelect = finfBoatImg(allBoatType[type],buildBoatDirection)
         else:
-            imgSelect = img_Fboat_N
-            if buildBoatSelected == allBoatType[type] and buildBoatDirection == 1:
-                imgSelect = img_Fboat_E
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 2:
-                imgSelect = img_Fboat_S
-            elif buildBoatSelected == allBoatType[type] and buildBoatDirection == 3:
-                imgSelect = img_Fboat_W
+            imgSelect = finfBoatImg(allBoatType[type],1)
+        
         if buildBoatSelected == allBoatType[type] and boatDataTypeCount(allBoatType[type],playerMapSelect) != gameDataBoat.count(allBoatType[type]):
             if inBuildMap:
                 if buildBoatSelected == "c" or buildBoatSelected == "p":
                     if buildBoatDirection == 0 or buildBoatDirection == 2:
-                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
                     else:
-                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
                 else:
                     playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//mapSize))*(playerMapBuild.winfo_width()//mapSize))+((playerMapBuild.winfo_width()//mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//mapSize))*(playerMapBuild.winfo_height()//mapSize))+((playerMapBuild.winfo_height()//mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
             else:
                 boatBuildZone.create_image(mouseX,mouseY,image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+
         elif buildBoatSelected != allBoatType[type] and boatDataTypeCount(allBoatType[type],playerMapSelect) != gameDataBoat.count(allBoatType[type]):
-            boatBuildZone.create_image(30*(type+1),200,image=imgSelect,tags=str(allBoatType[type])+"Boat")
+            boatBuildZone.create_image(app.winfo_width()//7,app.winfo_height()//8+app.winfo_height()//8*(type+1),image=imgSelect,tags=str(allBoatType[type])+"Boat")
+    
+    boatBuildZone.tag_raise(buildBoatSelected+"BoatSelect")
 
     # Party
     mapZone.place(relx = 0.5, rely = 0.5, relwidth = 1, relheight = 1,anchor = CENTER)
@@ -278,11 +401,13 @@ def refreshGUI():
             elif mapRead(playerMapSelect,j+1,i+1)[0] == "--" and mapRead(playerMapSelect,j+1,i+1)[1][0] == "X":
                 caseColor="steelblue1"
             elif mapRead(playerMapSelect,j+1,i+1)[0] != "--":
-                caseColor="lavender"
+                caseColor="steelBlue3"
             else:
                 caseColor="steelBlue3"
             cases_i.append(playerMap.create_rectangle((j*(playerMap.winfo_width()/mapSize)), (i*(playerMap.winfo_height()/mapSize)), ((j+1)*(playerMap.winfo_width()/mapSize)-2), ((i+1)*(playerMap.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor))
         cases.append(cases_i)
+
+    boatImgInMap(playerMap,playerMapSelect,False)
 
     ennemieMap.place(width = 300*globalSize, height = 300*globalSize,relx = 0.5, rely = 0.5, anchor = CENTER)
     ennemieMap.delete("all")
@@ -291,15 +416,17 @@ def refreshGUI():
         cases_i=[]
         for j in range(mapSize):
             if mapRead(ennemieMapSelect,j+1,i+1)[1] == "DD":
-                caseColor="black"
+                caseColor="steelblue1"
             elif mapRead(ennemieMapSelect,j+1,i+1)[0] != "--" and mapRead(ennemieMapSelect,j+1,i+1)[1][0] == "X":
                 caseColor="red"
             elif mapRead(ennemieMapSelect,j+1,i+1)[0] == "--" and mapRead(ennemieMapSelect,j+1,i+1)[1][0] == "X":
                 caseColor="steelblue1"
             else:
                 caseColor="steelBlue3"
-            cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor,activeoutline="white",activewidth=1*globalSize))
+            cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,activeoutline="white",fill=caseColor,activewidth=1*globalSize))
         cases.append(cases_i)
+
+    boatImgInMap(ennemieMap,ennemieMapSelect,True)
 
     if mapNumber > 2:
         if ennemieMapSelect + 1 == playerMapSelect:
@@ -312,11 +439,11 @@ def refreshGUI():
             button_backMap.config(text="Player "+str(ennemieMapSelect-1))
 
         if ennemieMapSelect < mapNumber and not (playerMapSelect == mapNumber and ennemieMapSelect+1 == mapNumber):
-            button_nextMap.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.9,rely=1,y=-10,anchor = SE)
+            button_nextMap.place(height=30,width=75,relheight=0.025,relwidth=0.05,relx=0.9,rely=1,y=-10,anchor = SE)
         else:
             button_nextMap.place_forget()
         if ennemieMapSelect > 1 and not (playerMapSelect == 1 and ennemieMapSelect-1 == 1):
-            button_backMap.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.1,rely=1,y=-10,anchor = SW)
+            button_backMap.place(height=30,width=75,relheight=0.025,relwidth=0.05,relx=0.1,rely=1,y=-10,anchor = SW)
         else:
             button_backMap.place_forget()
     else:
@@ -383,10 +510,10 @@ text_commingSoon.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.5, anchor =
 text_selectGame = Label(selectPartyPage,text=lg("Sélectionnez un mode de jeu"),fg="black")
 text_selectGame.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.05, anchor = CENTER)
 
-button_selectIAGame = ttk.Button(selectPartyPage, text=lg("Standard").upper(),command=lambda:[switch(prePartyPage),selectGameMode(0)])
+button_selectIAGame = ttk.Button(selectPartyPage, text=lg("Standard").upper(),command=lambda:[switch(prePartyPage),selectGameMode(0),creatmap()])
 button_selectIAGame.place(relwidth=0.4, relheight=0.75,relx = 0.3, rely = 0.475, anchor = CENTER)
 
-button_selectCustomGame = ttk.Button(selectPartyPage, text=lg("Personnalisé").upper(),command=lambda:[switch(prePartyPage),selectGameMode(1)])
+button_selectCustomGame = ttk.Button(selectPartyPage, text=lg("Personnalisé").upper(),command=lambda:[switch(prePartyPage),selectGameMode(1),creatmap()])
 button_selectCustomGame.place(relwidth=0.4, relheight=0.75,relx = 0.7, rely = 0.475, anchor = CENTER)
 
 button_back = ttk.Button(selectPartyPage, text=lg("Retour"),command=lambda:switch(mainMenuPage))
@@ -407,9 +534,6 @@ button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1
 
 button_launchGame = ttk.Button(prePartyPage, text=lg("/// LANCER ///"),command=laucheGame)
 button_launchGame.place(height=50,width=100,relheight=0.05,relwidth=0.1,relx=1,rely=1,x=-10,y=-10,anchor = SE)
-
-text_changeDirection = ttk.Label(prePartyPage, text="Orientation")
-text_changeDirection.place(height=30,width=30,relheight=0.025,relwidth=0.025,relx=0.1,rely=0.8,x=10,y=-10,anchor = SW)
         
 # Party
 
@@ -432,11 +556,12 @@ button_backMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect-
 
 ### --- Main execution --- ###
 
-def battleship():
+def mainStart():
     app.title("Battleship Warfare")
     app.minsize(800, 450)
     app.maxsize(app.winfo_screenwidth(),app.winfo_screenheight())
     app.geometry('%dx%d+%d+%d' % (W, H, (app.winfo_screenwidth()/2) - (W/2), (app.winfo_screenheight()/2) - (H/2)))
+    refreshImg()
+    creatmap()
     # Ouverture du menu
     switch(mainMenuPage)
-    app.after(1,refreshGUI)

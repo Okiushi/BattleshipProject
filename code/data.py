@@ -11,22 +11,22 @@ from support_tmp import *
 
 #### ---- Initalisation des variables global
 
-#### ---- Affectation des variables global
-
 global gameMode
 global mapSize
 global mapNumber
 global playerMapSelect
 global gameDataBoat
 
+#### ---- Affectation des variables global
 mapData = []
 atqHistory = []
 boatData = []
 gameDataBoat = ["a","c","f","s","p"]
 gameSettings = []
 allBoatType = ["a","c","f","s","p"]
+boatGuiData = []
 
-lang = 5
+lang = 0
 mapSize = 10
 playerMapSelect = 1
 mapNumber = 2
@@ -41,6 +41,8 @@ gameSettings = [gameMode,mapSize,playerMapSelect,mapNumber]
 # Attaquer une position ennemie
 def addBoat(map,type,x,y,direction):
     global lastBuildBoat
+    initialX = x
+    initialY = y
     if type == "a":
         size = 4
     if type == "c":
@@ -81,20 +83,24 @@ def addBoat(map,type,x,y,direction):
                 mapZoneModifType(map,type+str(occurence),x,y,x2,y2)
                 boatData[map-1] += [type+str(occurence)]
                 lastBuildBoat = type+str(occurence)
+                boatGuiData[map-1].append([type+str(occurence),initialX,initialY,direction])
 
 def removeBoat(map,type):
     mapZoneModifType(map,"--",BoatReadPos(map,type)[1],BoatReadPos(map,type)[2],BoatReadPos(map,type)[3],BoatReadPos(map,type)[4])
     boatData[map-1].remove(type)
-
+    for boat in range(len(boatGuiData[map-1])):
+        if boatGuiData[map-1][boat][0] == type:
+            del boatGuiData[map-1][boat]
+            break
+            
+# --- Attaque d'un joueur
 def atq(user,map,posX,posY):
     type = mapRead(map,posX,posY)[0]
     if mapData[map-1][posY-1][posX-1][1] != "DD":
         mapData[map-1][posY-1][posX-1][1] = "X"+str(user)
     if not [posX,posY,type,mapRead(map,posX,posY)[1]] in atqHistory[user-1][map-1]:
         atqHistory[user-1][map-1] += [[posX,posY,type,mapRead(map,posX,posY)[1]]]
-    refreshAllDeaths()
-
-def refreshAllDeaths():
+    # Rafraichissement des touchés-coulés
     for map in range(len(mapData)):
         for boat in range(len(boatData[map])):
             counter = 0
@@ -109,14 +115,17 @@ def refreshAllDeaths():
 
 # Création des maps
 def creatmap():
+    global testAddBoat
     testAddBoat = 0
     mapData.clear()
     atqHistory.clear()
     boatData.clear()
+    boatGuiData.clear()
     for i in range(mapNumber):
         mapData.append([])
-        atqHistory.append([])
+        atqHistory .append([])
         boatData.append([])
+        boatGuiData.append([])
         for i2 in range(mapNumber):
             atqHistory[i] += [[]]
         for j in range(mapSize):
