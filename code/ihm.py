@@ -240,6 +240,8 @@ def cooldown():
         print("Perdu")
     elif not playerDeathData[playerMapSelect-1] and playerDeathData.count(True) == mapNumber - 1:
         print("Gagné")
+    
+    print(strikerMap,atqDone,playerAtqCount)
 
     refreshImg()
     openTime += 1
@@ -298,9 +300,9 @@ def selectGameMode(mode):
 def clickEnnemieMap(event):
     global atqDone
     global playerAtqCount
-    if strikerMap == playerMapSelect and ennemieMapSelect not in playerAtqCount and atqDone == False and mapRead(ennemieMapSelect,event.x//(ennemieMap.winfo_width()//mapSize)+1,event.y//(ennemieMap.winfo_height()//mapSize)+1)[1][0] != "X" and playerDeathData[ennemieMapSelect-1] == False:
+    if strikerMap == playerMapSelect and ennemieMapSelect not in playerAtqCount and atqDone == False and mapRead(ennemieMapSelect,event.x//(ennemieMap.winfo_width()//mapSize)+1,event.y//(ennemieMap.winfo_height()//mapSize)+1)[1][0] != "X" and playerDeathData[ennemieMapSelect-1] == False and not playerDeathData[playerMapSelect-1]:
         playerAtqCount.append(ennemieMapSelect)
-        if len(playerAtqCount) == playerDeathData.count(False) - 1:
+        if len(playerAtqCount) == playerDeathData.count(False) - 1 or len(playerAtqCount) == mapNumber - 1:
             atqDone = True
         atq(playerMapSelect,ennemieMapSelect,event.x//(ennemieMap.winfo_width()//mapSize)+1,event.y//(ennemieMap.winfo_height()//mapSize)+1)
         refreshGUI()
@@ -352,7 +354,7 @@ def refreshGUI():
 
     # AllPage
     titleStyle.configure(size=int(50*globalSize))
-    default_font.configure(family="Arial",size=int(11*(globalSize*0.5+0.5)),weight=BOLD)
+    default_font.configure(family="Arial",size=int(11*(globalSize*0.45+0.55)),weight=BOLD)
 
     # PreParty
     if gameMode:
@@ -365,7 +367,7 @@ def refreshGUI():
     if playerDeathData[ennemieMapSelect-1] == True:
         ennemieName.config(text="Player "+str(ennemieMapSelect),fg="red")
     else:
-        ennemieName.config(text="Player "+str(ennemieMapSelect))
+        ennemieName.config(text="Player "+str(ennemieMapSelect),fg="black")
     ennemieName.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.5,rely=1,y=-10,anchor = S)
 
     boatBuildZone.delete("all")
@@ -456,7 +458,7 @@ def refreshGUI():
                 caseColor="steelblue1"
             else:
                 caseColor="steelBlue3"
-            if strikerMap == playerMapSelect and atqDone == False and ennemieMapSelect not in playerAtqCount and playerDeathData[ennemieMapSelect -1] == False:
+            if strikerMap == playerMapSelect and atqDone == False and ennemieMapSelect not in playerAtqCount and playerDeathData[ennemieMapSelect -1] == False and not playerDeathData[playerMapSelect-1] and mapRead(ennemieMapSelect,j+1,i+1)[1] == "--":
                 cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,activeoutline="white",fill=caseColor,activewidth=1*globalSize))
             else:
                 cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor))
@@ -563,7 +565,7 @@ boatBuildZone.place(relheight=1,relwidth=1,relx=0.5,rely=0.5,anchor=CENTER)
 playerMapBuild = Canvas(boatBuildZone,bg="steelBlue4",cursor="crosshair")
 
 text_selectGame = Label(prePartyPage,fg="black")
-text_selectGame.place(relheight=0.1,relwidth=0.2,relx = 0.5, rely = 0.05, anchor = CENTER)
+text_selectGame.place(width=100,relheight=0.1,relwidth=0.1,relx = 0.5, rely = 0.05, anchor = CENTER)
 
 button_back = ttk.Button(prePartyPage, text=lg("Retour"),command=lambda:switch(selectPartyPage))
 button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
@@ -583,7 +585,7 @@ playerMap = Canvas(mapZoneUser,bg="steelBlue4")
 ennemieMap = Canvas(mapZoneEnnemie,bg="steelBlue4",cursor="crosshair")
 
 text_selectGame2 = Label(partyPage,fg="black")
-text_selectGame2.place(relheight=0.1,relwidth=0.2,relx = 0.5, rely = 0.05, anchor = CENTER)
+text_selectGame2.place(width=100,relheight=0.1,relwidth=0.1,relx = 0.5, rely = 0.05, anchor = CENTER)
 
 button_backToMainMenu = ttk.Button(partyPage, text=lg("Menu principal"),command=lambda:switch(mainMenuPage))
 button_backToMainMenu.place(height=30,width=75,relheight=0.025,relwidth=0.1,relx=0,rely=1,x=10,y=-10,anchor = SW)
@@ -592,6 +594,7 @@ ennemieName = Label(mapZoneEnnemie)
 
 button_nextMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect+1),command=lambda:nextEnnemieMap(1))
 button_backMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect-1),command=lambda:nextEnnemieMap(0))
+
 
 ### --- Main execution --- ###
 

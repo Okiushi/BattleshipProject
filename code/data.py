@@ -17,6 +17,7 @@ global mapNumber
 global playerMapSelect
 global gameDataBoat
 global strikerMap
+global atqDone
 
 #### ---- Affectation des variables global
 mapData = []
