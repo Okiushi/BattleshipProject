@@ -16,6 +16,7 @@ global mapSize
 global mapNumber
 global playerMapSelect
 global gameDataBoat
+global strikerMap
 
 #### ---- Affectation des variables global
 mapData = []
@@ -25,16 +26,18 @@ gameDataBoat = ["a","c","f","s","p"]
 gameSettings = []
 allBoatType = ["a","c","f","s","p"]
 boatGuiData = []
+playerDeathData = []
 
-lang = 0
+lang = 1
 mapSize = 10
 playerMapSelect = 1
-mapNumber = 2
+mapNumber = 3
 gameMode = 0
 testAddBoat = 0
 lastBuildBoat = ""
 
-gameSettings = [gameMode,mapSize,playerMapSelect,mapNumber]
+strikerMap = playerMapSelect
+atqDone = False
 
 #### ---- Interaction utilisateur
 
@@ -96,20 +99,24 @@ def removeBoat(map,type):
 # --- Attaque d'un joueur
 def atq(user,map,posX,posY):
     type = mapRead(map,posX,posY)[0]
-    if mapData[map-1][posY-1][posX-1][1] != "DD":
+    if mapData[map-1][posY-1][posX-1][1] != "DD" and mapData[map-1][posY-1][posX-1][1] == "--":
         mapData[map-1][posY-1][posX-1][1] = "X"+str(user)
     if not [posX,posY,type,mapRead(map,posX,posY)[1]] in atqHistory[user-1][map-1]:
         atqHistory[user-1][map-1] += [[posX,posY,type,mapRead(map,posX,posY)[1]]]
     # Rafraichissement des touchés-coulés
     for map in range(len(mapData)):
+        totalBoatDeath = 0
         for boat in range(len(boatData[map])):
             counter = 0
             for x in range(len(mapData[map])):
                 for y in range(len(mapData[map][x])):
-                    if boatData[map][boat] == mapRead(map+1,x,y)[0] and mapRead(map+1,x,y)[1][0] == "X":
+                    if boatData[map][boat] == mapRead(map+1,x,y)[0] and (mapRead(map+1,x,y)[1][0] == "X" or mapRead(map+1,x,y)[1] == "DD"):
                         counter += 1
             if counter >= BoatReadPos(map+1,boatData[map][boat])[0]:
                 mapZoneModifStatus(map+1,"DD",BoatReadPos(map+1,boatData[map][boat])[1],BoatReadPos(map+1,boatData[map][boat])[2],BoatReadPos(map+1,boatData[map][boat])[3],BoatReadPos(map+1,boatData[map][boat])[4])
+                totalBoatDeath += 1
+        if totalBoatDeath >= len(gameDataBoat):
+            playerDeathData[map] = True
 
 #### ---- Manipulation des maps
 
@@ -121,11 +128,13 @@ def creatmap():
     atqHistory.clear()
     boatData.clear()
     boatGuiData.clear()
+    playerDeathData.clear()
     for i in range(mapNumber):
         mapData.append([])
         atqHistory .append([])
         boatData.append([])
         boatGuiData.append([])
+        playerDeathData.append(False)
         for i2 in range(mapNumber):
             atqHistory[i] += [[]]
         for j in range(mapSize):
@@ -209,27 +218,40 @@ def lg(text):
     return langDico[lang][langDico[1].index(text)]
 
 langDico = [# Anglais
-            ["Play","Settings","Credit","Exit","Back","Main menu","Standard","Custom","Comming soon","/// LAUNCH ///","Select a game mode","Next","Back"],
+            ["Play","Settings","Credit","Exit","Back","Main menu","Standard","Custom","Comming soon","/// LAUNCH ///","Select a game mode","Next","Back","Random"],
             # Français
-            ["Jouer","Réglage","Crédit","Quitter","Retour","Menu principal","Standard","Personnalisé","Prochainement","/// LANCER ///","Sélectionnez un mode de jeu","Suivant","Précédent"],
+            ["Jouer","Réglage","Crédit","Quitter","Retour","Menu principal","Standard","Personnalisé","Prochainement","/// LANCER ///","Sélectionnez un mode de jeu","Suivant","Précédent","Aléatoire"],
             # Allemand
-            ["Spielen", "Einstellungen", "Guthaben", "Beenden", "Zurück", "Hauptmenü", "Standard", "Benutzerdefiniert", "Demnächst","/// LANCER ///", "Spielmodus wählen", "Weiter", "Zurück"],
+            ["Spielen", "Einstellungen", "Guthaben", "Beenden", "Zurück", "Hauptmenü", "Standard", "Benutzerdefiniert", "Demnächst","/// LANCER ///", "Spielmodus wählen", "Weiter", "Zurück","Zufällig"],
             # Espagnol
-            ["Jugar", "Ajustes", "Créditos", "Salir", "Atrás", "Menú principal", "Estándar", "Personalizado", "Siguiente","/// Lanza ///", "Selecciona un modo de juego", "Siguiente", "Anterior"],
+            ["Jugar", "Ajustes", "Créditos", "Salir", "Atrás", "Menú principal", "Estándar", "Personalizado", "Siguiente","/// Lanza ///", "Selecciona un modo de juego", "Siguiente", "Anterior","Al azar","Aleatório"],
             # Portugais
             ["Jogar", "Definir", "Crédito", "Sair", "Voltar", "Menu principal", "Padrão", "Personalizado", "Próximo","/// ALMOÇO //", "Seleccionar um modo de jogo", "Próximo", "Anterior"],
             # Japonais
-            ["再生", "設定", "クレジット", "終了", "戻る", "メインメニュー", "標準", "カスタム", "近日公開", "/// START ///", "ゲームモードを選択してください","「次へ」","「前へ」"],
+            ["再生", "設定", "クレジット", "終了", "戻る", "メインメニュー", "標準", "カスタム", "近日公開", "/// START ///", "ゲームモードを選択してください","「次へ」","「前へ」","ランダム"],
             # Coréen
-            ["재생","설정","크레딧","종료","뒤로","주 메뉴","표준","사용자 지정","출시 예정","/// 시작 ///"," 게임 모드 선택","다음","이전"],
+            ["재생","설정","크레딧","종료","뒤로","주 메뉴","표준","사용자 지정","출시 예정","/// 시작 ///"," 게임 모드 선택","다음","이전","무작위의"],
             # Chinois
-            ["播放", "设置", "积分", "退出", "返回", "主菜单", "标准", "自定义", "下一步", "/// LAUNCH ///", "选择一个游戏模式", "下一步", "上一步"]
+            ["播放", "设置", "积分", "退出", "返回", "主菜单", "标准", "自定义", "下一步", "/// LAUNCH ///", "选择一个游戏模式", "下一步", "上一步","随机的"]
             ]
 
-def IA1creatMap(map):
+def creatRandomMap(map):
     direction = "NSEW"
     testAddBoat = 0
     while testAddBoat < len(gameDataBoat):
         addBoat(map,gameDataBoat[testAddBoat],randint(1,mapSize),randint(1,mapSize),direction[randint(0,3)])
         if testAddBoat < len(boatData[map-1]):
             testAddBoat += 1
+
+def IA1Atq(map,atqMap):
+    testAtqX = randint(1,mapSize)
+    testAtqY = randint(1,mapSize)
+    while mapRead(atqMap,testAtqX,testAtqY)[1][0] == "X" or mapRead(atqMap,testAtqX,testAtqY)[1] == "DD":
+        testAtqX = randint(1,mapSize)
+        testAtqY = randint(1,mapSize)
+    atq(map,atqMap,testAtqX,testAtqY)
+
+def ennemiPlay(striker):
+    for map in range(mapNumber):
+        if map+1 != striker and playerDeathData[striker-1] == False and playerDeathData[map] == False:
+            IA1Atq(striker,map+1)

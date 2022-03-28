@@ -36,7 +36,7 @@ ennemieMap.bind("<Leave>",lambda e:setInEnnemieMap(False))
 
 # --- Launcher
 app.after_idle(guiloop)
-app.after_idle(timer)
+app.after_idle(cooldown)
 
 mainStart()
 app.mainloop()

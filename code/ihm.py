@@ -1,6 +1,7 @@
 # --- Importation des bibliothèque
 
 # Imporations des données
+from itertools import count
 from data import *
 
 # Gestion des interfaces graphiques
@@ -35,6 +36,7 @@ inEnnemieMap = False
 Hz = 30
 ennemieMapAtq = 2
 openTime = 0
+playerAtqCount = []
 
 # --- Page
 window = Frame(app)
@@ -102,7 +104,7 @@ def refreshImg():
     global img_Pboat_S
     global img_Pboat_W
 
-    img_Aboat_N = ImageTk.PhotoImage(img_Aboat_N_Source.resize((int(400//13*globalSize),int(2000//13*globalSize)), Image.ANTIALIAS))
+    img_Aboat_N = ImageTk.PhotoImage(img_Aboat_N_Source.resize((int(200//7*globalSize),int(1000//7*globalSize)), Image.ANTIALIAS))
     img_Aboat_E = ImageTk.PhotoImage(img_Aboat_E_Source.resize((int(1000//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
     img_Aboat_S = ImageTk.PhotoImage(img_Aboat_S_Source.resize((int(200//7*globalSize),int(1000//7*globalSize)), Image.ANTIALIAS))
     img_Aboat_W = ImageTk.PhotoImage(img_Aboat_W_Source.resize((int(1000//7*globalSize),int(200//7*globalSize)), Image.ANTIALIAS))
@@ -177,17 +179,20 @@ def finfBoatImg(type,direction):
 
 def setFullScreen(event):
     global fullScreen
+    global globalSize
     if fullScreen :
         fullScreen = False
     else:
         fullScreen = True
     app.attributes("-fullscreen", fullScreen) 
+    globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
     refreshGUI()
+    refreshImg()
 
 def laucheGame():
     for i in range(mapNumber):
         if i != playerMapSelect:
-            IA1creatMap(i)
+            creatRandomMap(i)
     switch(partyPage)
     refreshGUI()
 
@@ -202,7 +207,7 @@ def switch(frame):
 # Redimentionnement
 
 # Selection de la map adverse visible
-def selectEnnemieMap(select):
+def nextEnnemieMap(select):
     global ennemieMapSelect
     if select and ennemieMapSelect + 1 == playerMapSelect:
         ennemieMapSelect += 2
@@ -215,11 +220,30 @@ def selectEnnemieMap(select):
         ennemieMapSelect -= 1
     refreshGUI()
 
-def timer():
+def cooldown():
     global openTime
-    openTime += 1
+    global strikerMap
+    global atqDone
+    global playerAtqCount
+    if strikerMap != playerMapSelect:
+        ennemiPlay(strikerMap)
+        atqDone = True
+    if atqDone:
+        atqDone = False
+        playerAtqCount.clear()
+            
+        if strikerMap < mapNumber:
+            strikerMap += 1
+        else:
+            strikerMap = 1
+    if playerDeathData[playerMapSelect-1]:
+        print("Perdu")
+    elif not playerDeathData[playerMapSelect-1] and playerDeathData.count(True) == mapNumber - 1:
+        print("Gagné")
+
     refreshImg()
-    app.after(1000,timer)
+    openTime += 1
+    app.after(100,cooldown)
 
 def changeBoatDirection(event):
     global buildBoatDirection
@@ -272,13 +296,14 @@ def selectGameMode(mode):
     refreshGUI()
 
 def clickEnnemieMap(event):
-    atq(playerMapSelect,ennemieMapSelect,event.x//(ennemieMap.winfo_width()//mapSize)+1,event.y//(ennemieMap.winfo_height()//mapSize)+1)
-    for ennemi in range(2,mapNumber+1):
-        if ennemi != playerMapSelect:
-            for atqMap in range(1,mapNumber+1):
-                if atqMap != ennemi:
-                    atq(ennemi,atqMap,randint(1,mapSize),randint(1,mapSize))
-    refreshGUI()
+    global atqDone
+    global playerAtqCount
+    if strikerMap == playerMapSelect and ennemieMapSelect not in playerAtqCount and atqDone == False and mapRead(ennemieMapSelect,event.x//(ennemieMap.winfo_width()//mapSize)+1,event.y//(ennemieMap.winfo_height()//mapSize)+1)[1][0] != "X" and playerDeathData[ennemieMapSelect-1] == False:
+        playerAtqCount.append(ennemieMapSelect)
+        if len(playerAtqCount) == playerDeathData.count(False) - 1:
+            atqDone = True
+        atq(playerMapSelect,ennemieMapSelect,event.x//(ennemieMap.winfo_width()//mapSize)+1,event.y//(ennemieMap.winfo_height()//mapSize)+1)
+        refreshGUI()
 
 def clickBuild(event):
     global testAddBoat
@@ -337,7 +362,10 @@ def refreshGUI():
         text_selectGame.config(text=lg("Standard"))
         text_selectGame2.config(text=lg("Standard"))
 
-    ennemieName.config(text="Player "+str(ennemieMapSelect))
+    if playerDeathData[ennemieMapSelect-1] == True:
+        ennemieName.config(text="Player "+str(ennemieMapSelect),fg="red")
+    else:
+        ennemieName.config(text="Player "+str(ennemieMapSelect))
     ennemieName.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0.5,rely=1,y=-10,anchor = S)
 
     boatBuildZone.delete("all")
@@ -383,6 +411,11 @@ def refreshGUI():
     
     boatBuildZone.tag_raise(buildBoatSelected+"BoatSelect")
 
+    if len(boatData[playerMapSelect-1]) == len(gameDataBoat) :
+        button_launchGame.config(state=ACTIVE)
+    else:
+        button_launchGame.config(state=DISABLED)
+
     # Party
     mapZone.place(relx = 0.5, rely = 0.5, relwidth = 1, relheight = 1,anchor = CENTER)
     mapZoneUser.place(relheight=1,relwidth=0.5)
@@ -423,7 +456,10 @@ def refreshGUI():
                 caseColor="steelblue1"
             else:
                 caseColor="steelBlue3"
-            cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,activeoutline="white",fill=caseColor,activewidth=1*globalSize))
+            if strikerMap == playerMapSelect and atqDone == False and ennemieMapSelect not in playerAtqCount and playerDeathData[ennemieMapSelect -1] == False:
+                cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,activeoutline="white",fill=caseColor,activewidth=1*globalSize))
+            else:
+                cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/mapSize)), (i*(ennemieMap.winfo_height()/mapSize)), ((j+1)*(ennemieMap.winfo_width()/mapSize)-2), ((i+1)*(ennemieMap.winfo_height()/mapSize)-2),outline=caseColor,fill=caseColor))
         cases.append(cases_i)
 
     boatImgInMap(ennemieMap,ennemieMapSelect,True)
@@ -510,10 +546,10 @@ text_commingSoon.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.5, anchor =
 text_selectGame = Label(selectPartyPage,text=lg("Sélectionnez un mode de jeu"),fg="black")
 text_selectGame.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.05, anchor = CENTER)
 
-button_selectIAGame = ttk.Button(selectPartyPage, text=lg("Standard").upper(),command=lambda:[switch(prePartyPage),selectGameMode(0),creatmap()])
+button_selectIAGame = ttk.Button(selectPartyPage, text=lg("Standard").upper(),command=lambda:[switch(prePartyPage),selectGameMode(0),creatmap(),refreshImg()])
 button_selectIAGame.place(relwidth=0.4, relheight=0.75,relx = 0.3, rely = 0.475, anchor = CENTER)
 
-button_selectCustomGame = ttk.Button(selectPartyPage, text=lg("Personnalisé").upper(),command=lambda:[switch(prePartyPage),selectGameMode(1),creatmap()])
+button_selectCustomGame = ttk.Button(selectPartyPage, text=lg("Personnalisé").upper(),command=lambda:[switch(prePartyPage),selectGameMode(1),creatmap(),refreshImg()])
 button_selectCustomGame.place(relwidth=0.4, relheight=0.75,relx = 0.7, rely = 0.475, anchor = CENTER)
 
 button_back = ttk.Button(selectPartyPage, text=lg("Retour"),command=lambda:switch(mainMenuPage))
@@ -533,8 +569,11 @@ button_back = ttk.Button(prePartyPage, text=lg("Retour"),command=lambda:switch(s
 button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
 
 button_launchGame = ttk.Button(prePartyPage, text=lg("/// LANCER ///"),command=laucheGame)
-button_launchGame.place(height=50,width=100,relheight=0.05,relwidth=0.1,relx=1,rely=1,x=-10,y=-10,anchor = SE)
-        
+button_launchGame.place(height=50,width=100,relheight=0.05,relwidth=0.15,relx=1,rely=1,x=-10,y=-10,anchor = SE)
+
+button_creatyRandomMap = ttk.Button(prePartyPage, text=lg("Aléatoire"),command=lambda:[creatmap(),creatRandomMap(playerMapSelect)])
+button_creatyRandomMap.place(height=30,width=100,relheight=0.025,relwidth=0.15,relx=1,rely=0.95,x=-10,y=-65,anchor = SE)
+
 # Party
 
 mapZone = Frame(partyPage)
@@ -551,8 +590,8 @@ button_backToMainMenu.place(height=30,width=75,relheight=0.025,relwidth=0.1,relx
 
 ennemieName = Label(mapZoneEnnemie)
 
-button_nextMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect+1),command=lambda:selectEnnemieMap(1))
-button_backMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect-1),command=lambda:selectEnnemieMap(0))
+button_nextMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect+1),command=lambda:nextEnnemieMap(1))
+button_backMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect-1),command=lambda:nextEnnemieMap(0))
 
 ### --- Main execution --- ###
 
