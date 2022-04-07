@@ -4,9 +4,6 @@
 from random import randint
 import ihm
 
-# Import des données stocké
-import json
-
 #### ---- Initalisation des variables global
 
 global gameMode
@@ -22,31 +19,57 @@ global ennemieMapSelect
 mapData = []
 atqHistory = []
 boatData = []
-gameDataBoat = ["a","c","f","s","p"]
 allBoatType = ["a","c","f","s","p"]
 boatGuiData = []
 playerDeathData = []
 tmpAtqDone = []
 inGame = False
-adversAtqAdvers = True
 ennemieMapSelect = 2
 
 lang = 1
-mapSize = 10
 playerMapSelect = 1
-mapNumber = 3
 gameMode = 0
 testAddBoat = 0
 lastBuildBoat = ""
 atqDone = False
 allAtqDone = False
+
+# Preset de partie
+mapSize = 10
+mapNumber = 3
+adversAtqAdvers = True
+gameDataBoat = ["a","c","f","s","p"]
+cooldown = 1
 strikerMap = 1
+
+def loadGamePreset():
+    global mapSize
+    global adversAtqAdvers
+    global gameDataBoat
+    global cooldown 
+    global mapNumber
+    global strikerMap
+    global aNumber
+    if gameMode == 0:
+        mapSize = 10
+        mapNumber = 2
+        adversAtqAdvers = True
+        gameDataBoat = ["a","c","f","s","p"]
+        cooldown = 1
+        strikerMap = 1
+    else:
+        mapSize = 10
+        mapNumber = 3
+        adversAtqAdvers = True
+        gameDataBoat.clear()
+        gameDataBoat = ["a","c","f","s","p"]
+        cooldown = 1
+        strikerMap = 1
 
 #### ---- Interaction utilisateur
 
 def laucheGame():
     global inGame
-    global strikerMap
     global ennemieMapSelect
     global atqDone
     global allAtqDone
@@ -54,17 +77,20 @@ def laucheGame():
         if i != playerMapSelect:
             creatRandomMap(i)
     inGame = True
-    strikerMap = 1
     atqDone = False
     allAtqDone = False
     tmpAtqDone.clear()
     if playerMapSelect != 1:
         ennemieMapSelect = 1
         ihm.textMaster.config(text="C'est au joueur "+str(strikerMap)+" de commencer",fg="grey")
+        ihm.app.after(2000,ihm.refreshToure)
+
     else:
-        ihm.textMaster.config(text="C'est à vous de commencer, veuillez exécuter vos tires sur chaque flotte adverse",fg="black")
         ennemieMapSelect = 2
-    ihm.refreshToure()
+        ihm.textMaster.config(text="Vous commencer",fg="black")
+        ihm.refreshToure()
+
+
     ihm.switch(ihm.partyPage)
 
 def stopGame():
@@ -157,13 +183,14 @@ def atq(user,map,posX,posY):
             playerDeathData[map] = True
     # Trembler l'écrent si touché
     if type != "--":
-        ihm.shake(4,0.2)
+        ihm.shake(0.2)
 
 #### ---- Manipulation des maps
 
 # Création des maps
 def creatmap():
     global testAddBoat
+    loadGamePreset()
     testAddBoat = 0
     mapData.clear()
     atqHistory.clear()
@@ -349,6 +376,7 @@ def IaAtq(map,atqMap):
             Succes = False
             direction = randint(0,1)
             while not Succes:
+                print("yaaaaaaaaaaaaa")
                 # Sur les bateaux détecté à l'horizontale
                 if HdirectionTest:
                     print("C'est partie pour tester l'horizontale")
@@ -361,10 +389,11 @@ def IaAtq(map,atqMap):
                             else:
                                 direction = 0
                             atqX = initialX
+                            atqY = initialY
                             if horizontaleOk == False:
-                                Succes = True
+                                HdirectionTest = False
+                                VdirectionTest = True
                                 print("Je suis piégé à l'horizontale, je teste la verticale")
-                                break
                             else:
                                 horizontaleOk = False
 
@@ -380,17 +409,18 @@ def IaAtq(map,atqMap):
                             else:
                                 atqX += 1
 
-                        elif (mapRead(atqMap,atqX,atqY)[1][0] == "X" or mapRead(atqMap,atqX,atqY)[1] == "DD") and mapRead(atqMap,atqX,atqY)[0] == "--": # Si la position testé est de l'eau ou un bateau coulé, alors il test une autre direction
+                        elif (mapRead(atqMap,atqX,atqY)[1][0] == "X" or mapRead(atqMap,atqX,atqY)[1] == "DD"): # Si la position testé est de l'eau ou un bateau coulé, alors il test une autre direction
                             print("bon je vais changer de côté, c'est le bord içi")
                             if direction == 0:
                                 direction = 1
                             else:
                                 direction = 0
                             atqX = initialX
+                            atqY = initialY
                             if horizontaleOk == False:
-                                Succes = True
+                                HdirectionTest = False
+                                VdirectionTest = True
                                 print("Je suis piégé à l'horizontale, je teste la verticale")
-                                break
                             else:
                                 horizontaleOk = False
 
@@ -405,11 +435,12 @@ def IaAtq(map,atqMap):
                                 direction = 1
                             else:
                                 direction = 0
+                            atqX = initialX
                             atqY = initialY
                             if verticaleOk == False:
-                                Succes = True
+                                HdirectionTest = True
+                                VdirectionTest = False
                                 print("Je suis piégé à la verticale, je teste l'horizontale")
-                                break
                             else:
                                 verticaleOk = False
 
@@ -425,22 +456,21 @@ def IaAtq(map,atqMap):
                             else:
                                 atqY += 1
 
-                        elif (mapRead(atqMap,atqX,atqY)[1] != "--") and mapRead(atqMap,atqX,atqY)[0] == "--": # Si la position testé est de l'eau ou un bateau coulé, alors il test une autre direction
-                            print("Je suis piégé à la verticale, je teste l'horizontale")
+                        elif (mapRead(atqMap,atqX,atqY)[1][0] == "X" or mapRead(atqMap,atqX,atqY)[1] == "DD"): # Si la position testé est de l'eau ou un bateau coulé, alors il test une autre direction
+                            print("bon je vais changer de côté, c'est le bord içi")
                             if direction == 0:
                                 direction = 1
                             else:
                                 direction = 0
+                            atqX = initialX
                             atqY = initialY
                             if verticaleOk == False:
-                                Succes = True
+                                HdirectionTest = True
+                                VdirectionTest = False
                                 print("Je suis piégé à l'horizontale, je teste la verticale")
-                                HdirectionTest = False
-                                VdirectionTest = True
-                                break
                             else:
                                 verticaleOk = False
-
+                        
                 if Succes:
                     break
 
@@ -452,8 +482,6 @@ def IaAtq(map,atqMap):
 
     print("atq",lettre[atqY-1],atqX)
     atq(map,atqMap,atqX,atqY)
-
-    
 
 def ennemiPlay(striker):
     global allAtqDone
