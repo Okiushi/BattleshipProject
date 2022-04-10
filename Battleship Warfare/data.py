@@ -29,7 +29,6 @@ tmpAtqDone = []
 inGame = False
 ennemieMapSelect = 2
 
-lang = 1
 playerMapSelect = 1
 gameMode = 0
 testAddBoat = 0
@@ -57,7 +56,7 @@ def loadGamePreset():
         mapNumber = 2
         adversAtqAdvers = True
         gameDataBoat = ["a","c","f","s","p"]
-        cooldown = 2
+        cooldown = 1.5
         strikerMap = 1
     if gameMode == 1:
         mapSize = 12
@@ -65,7 +64,7 @@ def loadGamePreset():
         adversAtqAdvers = True
         gameDataBoat.clear()
         gameDataBoat = ["a","a","c","c","c","f","f","f","f","s","s"]
-        cooldown = 2
+        cooldown = 1.5
         strikerMap = 1
     if gameMode == 2:
         mapSize = 4
@@ -171,7 +170,7 @@ def removeBoat(map,type):
         if boatGuiData[map-1][boat][0] == type:
             del boatGuiData[map-1][boat]
             break
-            
+
 # --- Attaque d'un joueur
 def atq(user,map,posX,posY):
     global atqDone
@@ -181,9 +180,9 @@ def atq(user,map,posX,posY):
     # Effet réaliser sur le GUI selon le typoe de la case
     if mapRead(map,posX,posY)[0] != "--" and (map == ennemieMapSelect or map == playerMapSelect):
         ihm.shake(0.2)
-        ihm.magicsound.magicsound("../gui/sound/Explosion/explosion{}.mp3".format(randint(1,3)),block = False)
+        ihm.magicsound.magicsound("gui/sound/Explosion/explosion{}.mp3".format(randint(1,3)),block = False)
     if mapRead(map,posX,posY)[0] == "--":
-        ihm.magicsound.magicsound("../gui/sound/Water/Splash{}.mp3".format(randint(1,6)),block = False)
+        ihm.magicsound.magicsound("gui/sound/Water/Splash{}.mp3".format(randint(1,6)),block = False)
 
     if mapData[map-1][posY-1][posX-1][1] != "DD" and mapData[map-1][posY-1][posX-1][1] == "--":
         mapData[map-1][posY-1][posX-1][1] = "X"+str(user)
@@ -209,8 +208,6 @@ def atq(user,map,posX,posY):
         if totalBoatDeath >= len(gameDataBoat):
             playerDeathData[map] = True
     
-
-
 #### ---- Manipulation des maps
 
 # Création des maps
@@ -493,19 +490,30 @@ def ennemiPlay(striker):
         IaAtq(striker,playerMapSelect)
         allAtqDone = True
 
+
+def loadSettings():
+    with open("usersettings.json", 'r') as file:
+        settings = json.load(file)
+
+    ihm.lang = settings.get("settings").get("lang")
+    ihm.fullScreen = settings.get("settings").get("fullscreen")
+    ihm.W  = settings.get("settings").get("W")
+    ihm.H = settings.get("settings").get("H")
+    ihm.Hz = settings.get("settings").get("Hz")
+    ihm.shakeIntensity = settings.get("settings").get("shakeIntensity")
+    ihm.showLetter = settings.get("settings").get("showLetter")
+    ihm.inversLetter = settings.get("settings").get("inversLetter")
+    ihm.mainVolume = settings.get("settings").get("mainVolume")
+    ihm.musicVolume = settings.get("settings").get("musicVolume")
+    ihm.effectVolume = settings.get("settings").get("effectVolume")
+
+    ihm.app.attributes("-fullscreen", ihm.fullScreen)
+
+
 def saveSettings():
-
-    if ihm.restart:
-        if inGame:
-            ihm.app.destroy()
-            os.system("start controller.py")
-        else:
-            ihm.app.destroy()
-            os.system("start controller.py")
-
     settings ={
     "settings" : {
-        "lang": lang,
+        "lang": ihm.lang,
         "fullScreen": ihm.fullScreen,
         "W": ihm.W,
         "H": ihm.H,
@@ -519,5 +527,10 @@ def saveSettings():
         }
     }
 
-    with open("../save/usersettings.json", 'w') as file:
+    with open("usersettings.json", 'w') as file:
         json.dump(settings, file)
+
+    ihm.app.attributes("-fullscreen", ihm.fullScreen)
+    if ihm.restart:
+        ihm.app.destroy()
+        os.system("start controller.py")

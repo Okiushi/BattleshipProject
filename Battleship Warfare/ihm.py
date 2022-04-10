@@ -22,6 +22,7 @@ import tkinter.font as tkFont
 try: # Teste l'importation du module PIL
     from PIL import ImageTk, Image
 except: # install le module s'il n'est pas présent
+    os.system("python -m pip uninstall pil")
     os.system("python -m pip install pillow")
     from PIL import ImageTk, Image
 
@@ -49,25 +50,26 @@ page = ""
 restart = False
 
 # --- Réglage
-with open("../save/usersettings.json", 'r') as file:
+with open("usersettings.json", 'r') as file:
     settings = json.load(file)
 
-d.lang = settings.get("settings").get("lang")
-fullScreen = settings.get("settings").get("fullscreen")
-W  = settings.get("settings").get("W")
-H = settings.get("settings").get("H")
-Hz = settings.get("settings").get("Hz")
-shakeIntensity = settings.get("settings").get("shakeIntensity")
-showLetter = settings.get("settings").get("showLetter")
-inversLetter = settings.get("settings").get("inversLetter")
-mainVolume = settings.get("settings").get("mainVolume")
+lang = 0
+fullScreen = False
+W  = 800
+H = 450
+Hz = 30
+shakeIntensity = 4
+showLetter = True
+inversLetter = False
+mainVolume = 100
 musicVolume = settings.get("settings").get("musicVolume")
 effectVolume = settings.get("settings").get("effectVolume")
-file.close()
+
+loadSettings()
 
 # Application de langue du jeu
 country = ["EN","FR","DE","ES","PT","JP","KR","CN"]
-with open("../gui/lang/{}.txt".format(country[lang]), "r", encoding='utf-8') as lgFile:
+with open("gui/lang/{}.txt".format(country[lang]), "r", encoding='utf-8') as lgFile:
     langFile = lgFile.readlines()
 
 # --- Page
@@ -100,27 +102,27 @@ def switch(frame):
 # --- Gestion des images
 
 # Écran de démarage
-img_Start_Screen_Source = Image.open("../gui/image/Screen/Start_Screen.png")
+img_Start_Screen_Source = Image.open("gui/image/Screen/Start_Screen.png")
 img_Start_Screen = ImageTk.PhotoImage(img_Start_Screen_Source.resize((int((800*globalSize)),int((450*globalSize))), Image.ANTIALIAS))
 
 # Titre du menu
-img_Title_Source = Image.open("../gui/image/Title.png")
+img_Title_Source = Image.open("gui/image/Title.png")
 
 # Porte avion
-img_Aboat_N_Source = Image.open("../gui/image/Aboat/Aboat_N.png"); img_Aboat_E_Source = Image.open("../gui/image/Aboat/Aboat_E.png"); img_Aboat_S_Source = Image.open("../gui/image/Aboat/Aboat_S.png"); img_Aboat_W_Source = Image.open("../gui/image/Aboat/Aboat_W.png")
+img_Aboat_N_Source = Image.open("gui/image/Aboat/Aboat_N.png"); img_Aboat_E_Source = Image.open("gui/image/Aboat/Aboat_E.png"); img_Aboat_S_Source = Image.open("gui/image/Aboat/Aboat_S.png"); img_Aboat_W_Source = Image.open("gui/image/Aboat/Aboat_W.png")
 # Cuirrasé
-img_Cboat_N_Source = Image.open("../gui/image/Cboat/Cboat_N.png"); img_Cboat_E_Source = Image.open("../gui/image/Cboat/Cboat_E.png"); img_Cboat_S_Source = Image.open("../gui/image/Cboat/Cboat_S.png"); img_Cboat_W_Source = Image.open("../gui/image/Cboat/Cboat_W.png")
+img_Cboat_N_Source = Image.open("gui/image/Cboat/Cboat_N.png"); img_Cboat_E_Source = Image.open("gui/image/Cboat/Cboat_E.png"); img_Cboat_S_Source = Image.open("gui/image/Cboat/Cboat_S.png"); img_Cboat_W_Source = Image.open("gui/image/Cboat/Cboat_W.png")
 # Frégate
-img_Fboat_N_Source = Image.open("../gui/image/Fboat/Fboat_N.png"); img_Fboat_E_Source = Image.open("../gui/image/Fboat/Fboat_E.png"); img_Fboat_S_Source = Image.open("../gui/image/Fboat/Fboat_S.png"); img_Fboat_W_Source = Image.open("../gui/image/Fboat/Fboat_W.png")
+img_Fboat_N_Source = Image.open("gui/image/Fboat/Fboat_N.png"); img_Fboat_E_Source = Image.open("gui/image/Fboat/Fboat_E.png"); img_Fboat_S_Source = Image.open("gui/image/Fboat/Fboat_S.png"); img_Fboat_W_Source = Image.open("gui/image/Fboat/Fboat_W.png")
 # Sous-marin
-img_Sboat_N_Source = Image.open("../gui/image/Sboat/Sboat_N.png"); img_Sboat_E_Source = Image.open("../gui/image/Sboat/Sboat_E.png"); img_Sboat_S_Source = Image.open("../gui/image/Sboat/Sboat_S.png"); img_Sboat_W_Source = Image.open("../gui/image/Sboat/Sboat_W.png")
+img_Sboat_N_Source = Image.open("gui/image/Sboat/Sboat_N.png"); img_Sboat_E_Source = Image.open("gui/image/Sboat/Sboat_E.png"); img_Sboat_S_Source = Image.open("gui/image/Sboat/Sboat_S.png"); img_Sboat_W_Source = Image.open("gui/image/Sboat/Sboat_W.png")
 # Patrouilleur
-img_Pboat_N_Source = Image.open("../gui/image/Pboat/Pboat_N.png"); img_Pboat_E_Source = Image.open("../gui/image/Pboat/Pboat_E.png"); img_Pboat_S_Source = Image.open("../gui/image/Pboat/Pboat_S.png"); img_Pboat_W_Source = Image.open("../gui/image/Pboat/Pboat_W.png")
+img_Pboat_N_Source = Image.open("gui/image/Pboat/Pboat_N.png"); img_Pboat_E_Source = Image.open("gui/image/Pboat/Pboat_E.png"); img_Pboat_S_Source = Image.open("gui/image/Pboat/Pboat_S.png"); img_Pboat_W_Source = Image.open("gui/image/Pboat/Pboat_W.png")
 
 # Case touché
-img_X_Source = Image.open("../gui/image/Status/X.png")
+img_X_Source = Image.open("gui/image/Status/X.png")
 # Case coulé
-img_D_Source = Image.open("../gui/image/Status/D.png")
+img_D_Source = Image.open("gui/image/Status/D.png")
 
 # --- Rafraichissement de la taille des images (toute les secondes)
 def refreshImg():
@@ -169,7 +171,7 @@ def finfBoatImg(type,direction):
 
 def closeApp(): 
     if d.inGame:
-        if messagebox.askokcancel(lg("Battleship Warfare Alert"), lg("Êtes-vous sûr de vouloir quitter le jeu ?\n(Votre session en cours sera effacée)")): 
+        if messagebox.askokcancel(lg("Battleship Warfare Alert"), lg("Êtes-vous sûr de vouloir quitter le jeu ? (Votre session en cours sera effacée)")): 
             app.destroy()
     else:
         app.destroy()
@@ -193,13 +195,12 @@ def setFullScreen():
     app.attributes("-fullscreen", fullScreen) 
     globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
     refreshGUI()
-    d.saveSettings()
 
 def buttonSound(sound):
     try:
-        magicsound.magicsound("../gui/sound/Button/Click{}.mp3".format(sound),block = False)
+        magicsound.magicsound("gui/sound/Button/Click{}.mp3".format(sound),block = False)
     except:
-        magicsound.magicsound("../gui/sound/Button/Click{}.wav".format(sound),block = False)
+        magicsound.magicsound("gui/sound/Button/Click{}.wav".format(sound),block = False)
 
 def changeGameMode():
     d.gameMode += 1
@@ -208,12 +209,13 @@ def changeGameMode():
 
 def changeLang():
     global restart
-    d.lang += 1
-    if d.lang > 7:
-        d.lang = 0
-    with open("../save/usersettings.json", 'r') as fp:
+    global lang
+    lang += 1
+    if lang > 7:
+        lang = 0
+    with open("usersettings.json", 'r') as fp:
         settings = json.load(fp)
-    if d.lang != settings.get("settings").get("lang"):
+    if lang != settings.get("settings").get("lang"):
         restart = True
     else:
         restart = False
@@ -249,9 +251,9 @@ def refreshToure():
             d.tmpAtqDone.clear()
             if d.strikerMap != d.playerMapSelect:
                 try:
-                    magicsound.magicsound("../gui/sound/Beep/beep{}.wav".format(randint(1,6)),block = False)
+                    magicsound.magicsound("gui/sound/Beep/beep{}.wav".format(randint(1,6)),block = False)
                 except:
-                    magicsound.magicsound("../gui/sound/Beep/beep{}.mp3".format(randint(1,3)),block = False)
+                    magicsound.magicsound("gui/sound/Beep/beep{}.mp3".format(randint(1,3)),block = False)
 
             if d.strikerMap < d.mapNumber:
                 d.strikerMap += 1
@@ -300,7 +302,7 @@ def changeBoatDirection(event):
             buildBoatDirection += 1
         else:
             buildBoatDirection = 0
-        magicsound.magicsound("../gui/sound/Build/Rotate.wav",block = False)
+        magicsound.magicsound("gui/sound/Build/Rotate.wav",block = False)
 
 def setInBuildMap(value):
     global inBuildMap
@@ -345,18 +347,18 @@ def boatSelect(type,direction,forceSelect):
             buildBoatDirection = direction
         else:
             buildBoatDirection = orientation.index(direction)
-        magicsound.magicsound("../gui/sound/Build/boatSelected.wav",block = False)
+        magicsound.magicsound("gui/sound/Build/boatSelected.wav",block = False)
         
     if type == "":
-        magicsound.magicsound("../gui/sound/Build/boatUnselected.wav",block = False)
+        magicsound.magicsound("gui/sound/Build/boatUnselected.wav",block = False)
 
 # Gestion de la langue
 def lg(text):
-    with open("../save/usersettings.json", 'r') as file:
+    with open("usersettings.json", 'r') as file:
         settings = json.load(file)
-    with open("../gui/lang/FR.txt", "r", encoding='utf-8') as lgFile:
+    with open("gui/lang/FR.txt", "r", encoding='utf-8') as lgFile:
         frenchLangFile = lgFile.readlines()
-    with open("../gui/lang/{}.txt".format(country[settings.get("settings").get("lang")]), "r", encoding='utf-8') as lgFile:
+    with open("gui/lang/{}.txt".format(country[settings.get("settings").get("lang")]), "r", encoding='utf-8') as lgFile:
         langFile = lgFile.readlines()
     return langFile[frenchLangFile.index(text+"\n")][0:-1]
 
@@ -393,7 +395,7 @@ def clickBuild(event):
             if testAddBoat < len(boatData[map-1]):
                 testAddBoat += 1
             refreshGUI()
-        magicsound.magicsound("../gui/sound/Water/Splash{}.mp3".format(randint(1,6)),block = False)
+        magicsound.magicsound("gui/sound/Water/Splash{}.mp3".format(randint(1,6)),block = False)
         boatSelect("",1,0)
     else:
         type = mapRead(map,event.x//(playerMapBuild.winfo_width()//d.mapSize)+1,event.y//(playerMapBuild.winfo_height()//d.mapSize)+1)[0]
@@ -468,7 +470,7 @@ def refreshGUI():
 
     # Settings
     if page == settingsPage:
-        with open("../gui/lang/{}.txt".format(country[d.lang]), "r", encoding='utf-8') as lgFile:
+        with open("gui/lang/{}.txt".format(country[lang]), "r", encoding='utf-8') as lgFile:
             langFile = lgFile.readlines()
         mainSettingsPage_lang_button.config(text=langFile[0][0:-1])
         if fullScreen:
@@ -486,11 +488,11 @@ def refreshGUI():
 
 
         if d.inGame:
-            mainSettingsPage_button_apply.config(command=lambda:[switch(partyPage),buttonSound(1),d.saveSettings()])
-            mainSettingsPage_button_back.config(command=lambda:[switch(partyPage),buttonSound(2)])
+            mainSettingsPage_button_apply.config(command=lambda:[d.saveSettings(),d.loadSettings(),switch(partyPage),buttonSound(1)])
+            mainSettingsPage_button_back.config(command=lambda:[d.loadSettings(),switch(partyPage),buttonSound(2)])
         else:
-            mainSettingsPage_button_apply.config(command=lambda:[switch(mainMenuPage),buttonSound(1),d.saveSettings()])
-            mainSettingsPage_button_back.config(command=lambda:[switch(mainMenuPage),buttonSound(2)])
+            mainSettingsPage_button_apply.config(command=lambda:[d.saveSettings(),d.loadSettings(),switch(mainMenuPage),buttonSound(1)])
+            mainSettingsPage_button_back.config(command=lambda:[d.loadSettings(),switch(mainMenuPage),buttonSound(2)])
 
     # GameSettings
     if page == gameSettingsPage:
@@ -502,7 +504,6 @@ def refreshGUI():
             button_gameMode.config(text=lg("Casual"))
         if d.gameMode == 3:
             button_gameMode.config(text=lg("Hardcore !"))
-
 
     # PreParty
     if page == prePartyPage:
@@ -700,7 +701,7 @@ button_credit.place(height=20,relheight=0.05, relwidth=0.25,relx = 0.5, rely = 0
 button_exit = ttk.Button(mainMenuPage, text=lg("Quitter"),command=lambda:app.destroy(),takefocus = 0)
 button_exit.place(height=15,relheight=0.05, relwidth=0.1,relx=1,rely=1,x=-10,y=-10,anchor = SE)
 
-mainMenuPage_label = Label(mainMenuPage, text="v 0.2.1",fg="grey70")
+mainMenuPage_label = Label(mainMenuPage, text="v 0.2.2",fg="grey70")
 mainMenuPage_label.place(height=15,relheight=0.05, relwidth=0.1,rely=1,x=2,y=-2,anchor = SW)
 
 # Settings
@@ -732,11 +733,11 @@ mainSettingsPage_button_back.place(height=30,width=50,relheight=0.025,relwidth=0
 
 # Credits
 
+text_credit = Label(creditsPage,text="Code and graphics\nOkiushi\n\nWebsite and communication\nGakou",bg="black",fg="white")
+text_credit.place(relheight=1,relwidth=1,relx = 0.5, rely = 0.5, anchor = CENTER)
+
 button_back = ttk.Button(creditsPage, text=lg("Retour"),command=lambda:[switch(mainMenuPage),buttonSound(2)],takefocus = 0)
 button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
-
-text_commingSoon = Label(creditsPage,text=lg("Prochainement"),bg="black",fg="white")
-text_commingSoon.place(relheight=0.1,relwidth=1,relx = 0.5, rely = 0.5, anchor = CENTER)
 
 # Select Party
 
@@ -758,7 +759,7 @@ text_selectGame2 = Label(gameSettingsPage,fg="black")
 text_selectGame2.place(width=100,relheight=0.075,relwidth=0.1,relx = 0.5, rely = 0, anchor = N)
 
 button_gameMode = ttk.Button(gameSettingsPage,command=lambda:[changeGameMode(),buttonSound(3)],takefocus = 0)
-button_gameMode.place(height=30,width=100,relheight=0.025,relwidth=0.05,relx=0.5,rely=0.6,anchor = CENTER)
+button_gameMode.place(height=30,width=100,relheight=0.025,relwidth=0.05,relx=0.5,rely=0.7,anchor = CENTER)
 
 button_back = ttk.Button(gameSettingsPage, text=lg("Retour"),command=lambda:[d.loadGamePreset(),switch(selectPartyPage),buttonSound(2)],takefocus = 0)
 button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
@@ -819,9 +820,9 @@ def ihmStart():
     app.minsize(800, 450)
     app.maxsize(app.winfo_screenwidth(),app.winfo_screenheight())
     app.geometry('%dx%d+%d+%d' % (W, H, (app.winfo_screenwidth()/2) - (W/2), (app.winfo_screenheight()/2) - (H/2)))
-    app.iconbitmap("../gui/image/icon.ico")
+    app.iconbitmap("gui/image/icon.ico")
     creatmap()
     # Ouverture du menu
     switch(startPage)
     app.after(3000,lambda:switch(mainMenuPage))
-    magicsound.magicsound('../gui/sound/StartScreen/StartScreen.mp3',block = False)
+    magicsound.magicsound('gui/sound/StartScreen/StartScreen.mp3',block = False)

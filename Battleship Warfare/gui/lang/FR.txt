@@ -14,7 +14,7 @@ Suivant
 Précédent
 Aléatoire
 Battleship Warfare Alert
-Êtes-vous sûr de vouloir quitter le jeu ?\n(Votre session en cours sera effacée)
+Êtes-vous sûr de vouloir quitter le jeu ? (Votre session en cours sera effacée)
 Êtes-vous sûr de vouloir abandonner ?
 Le joueur {} exécute ses tirs.
 Veuillez exécuter vos tirs sur chaque flotte adverse.
