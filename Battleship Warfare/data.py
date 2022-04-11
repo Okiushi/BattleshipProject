@@ -496,7 +496,7 @@ def loadSettings():
         settings = json.load(file)
 
     ihm.lang = settings.get("settings").get("lang")
-    ihm.fullScreen = settings.get("settings").get("fullscreen")
+    ihm.fullScreen = settings.get("settings").get("fullScreen")
     ihm.W  = settings.get("settings").get("W")
     ihm.H = settings.get("settings").get("H")
     ihm.Hz = settings.get("settings").get("Hz")
@@ -507,8 +507,9 @@ def loadSettings():
     ihm.musicVolume = settings.get("settings").get("musicVolume")
     ihm.effectVolume = settings.get("settings").get("effectVolume")
 
-    ihm.app.attributes("-fullscreen", ihm.fullScreen)
 
+def applySettings():
+    ihm.app.attributes("-fullscreen", ihm.fullScreen)
 
 def saveSettings():
     settings ={

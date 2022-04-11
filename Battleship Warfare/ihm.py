@@ -3,6 +3,7 @@
 # --- Importation des bibliothèque
 
 # Imporations des données
+from os import stat
 from data import *
 import data as d
 
@@ -62,10 +63,8 @@ shakeIntensity = 4
 showLetter = True
 inversLetter = False
 mainVolume = 100
-musicVolume = settings.get("settings").get("musicVolume")
-effectVolume = settings.get("settings").get("effectVolume")
-
-loadSettings()
+musicVolume = 100
+effectVolume = 100
 
 # Application de langue du jeu
 country = ["EN","FR","DE","ES","PT","JP","KR","CN"]
@@ -208,17 +207,10 @@ def changeGameMode():
         d.gameMode = 0
 
 def changeLang():
-    global restart
     global lang
     lang += 1
     if lang > 7:
         lang = 0
-    with open("usersettings.json", 'r') as fp:
-        settings = json.load(fp)
-    if lang != settings.get("settings").get("lang"):
-        restart = True
-    else:
-        restart = False
 
 # Selection de la map adverse visible
 def nextEnnemieMap(select):
@@ -430,6 +422,7 @@ def refreshGUI():
     global mouseX
     global mouseY
     global globalSize
+    global restart
     globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
     mouseX = app.winfo_pointerx() - app.winfo_rootx()
     mouseY = app.winfo_pointery() - app.winfo_rooty()
@@ -478,21 +471,28 @@ def refreshGUI():
         else:
             mainSettingsPage_fullscreen_label.config(text=lg("Basculer en plein écran"))
 
-        if restart:
-            mainSettingsPage_button_apply.config(text=lg("Redémarrer et appliquer"))
-            mainSettingsPage_button_apply.place(height=30,width=150,relheight=0.025,relwidth=0.1,relx=0.05,rely=1,x=60,y=-10,anchor = SW)
+        mainSettingsPage_button_apply.config(text=lg("Appliquer"))
+        mainSettingsPage_button_apply.place(height=30,width=75,relheight=0.025,relwidth=0.05,relx=0.05,rely=1,x=60,y=-10,anchor = SW)
 
+        with open("usersettings.json", 'r') as fp:
+            settings = json.load(fp)
+        if lang != settings.get("settings").get("lang") or fullScreen != settings.get("settings").get("fullScreen"):
+            mainSettingsPage_button_apply.config(stat=NORMAL)
+            if lang != settings.get("settings").get("lang"):
+                restart = True
+                mainSettingsPage_button_apply.config(text=lg("Redémarrer et appliquer"))
+                mainSettingsPage_button_apply.place(height=30,width=150,relheight=0.025,relwidth=0.1,relx=0.05,rely=1,x=60,y=-10,anchor = SW)
+            else:
+                restart = False
         else:
-            mainSettingsPage_button_apply.config(text=lg("Appliquer"))
-            mainSettingsPage_button_apply.place(height=30,width=75,relheight=0.025,relwidth=0.05,relx=0.05,rely=1,x=60,y=-10,anchor = SW)
-
-
+            mainSettingsPage_button_apply.config(stat=DISABLED)
         if d.inGame:
-            mainSettingsPage_button_apply.config(command=lambda:[d.saveSettings(),d.loadSettings(),switch(partyPage),buttonSound(1)])
-            mainSettingsPage_button_back.config(command=lambda:[d.loadSettings(),switch(partyPage),buttonSound(2)])
+            backPage = partyPage
         else:
-            mainSettingsPage_button_apply.config(command=lambda:[d.saveSettings(),d.loadSettings(),switch(mainMenuPage),buttonSound(1)])
-            mainSettingsPage_button_back.config(command=lambda:[d.loadSettings(),switch(mainMenuPage),buttonSound(2)])
+            backPage = mainMenuPage
+
+        mainSettingsPage_button_apply.config(command=lambda:[d.saveSettings(),d.loadSettings(),d.applySettings(),switch(backPage),buttonSound(1)])
+        mainSettingsPage_button_back.config(command=lambda:[d.loadSettings(),d.applySettings(),switch(backPage),buttonSound(2)])
 
     # GameSettings
     if page == gameSettingsPage:
@@ -701,7 +701,7 @@ button_credit.place(height=20,relheight=0.05, relwidth=0.25,relx = 0.5, rely = 0
 button_exit = ttk.Button(mainMenuPage, text=lg("Quitter"),command=lambda:app.destroy(),takefocus = 0)
 button_exit.place(height=15,relheight=0.05, relwidth=0.1,relx=1,rely=1,x=-10,y=-10,anchor = SE)
 
-mainMenuPage_label = Label(mainMenuPage, text="v 0.2.2",fg="grey70")
+mainMenuPage_label = Label(mainMenuPage, text="v 0.2.3",fg="grey70")
 mainMenuPage_label.place(height=15,relheight=0.05, relwidth=0.1,rely=1,x=2,y=-2,anchor = SW)
 
 # Settings
@@ -821,6 +821,8 @@ def ihmStart():
     app.maxsize(app.winfo_screenwidth(),app.winfo_screenheight())
     app.geometry('%dx%d+%d+%d' % (W, H, (app.winfo_screenwidth()/2) - (W/2), (app.winfo_screenheight()/2) - (H/2)))
     app.iconbitmap("gui/image/icon.ico")
+    d.loadSettings()
+    d.applySettings()
     creatmap()
     # Ouverture du menu
     switch(startPage)
