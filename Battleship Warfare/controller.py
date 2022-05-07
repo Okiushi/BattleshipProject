@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-print("Running, please do no close the console...") # Prévention sur le faite que la console si visible par l'utilisateur ne doit pas être fermer
-# --- Importation des modules
+# --- Importation des mqodules
 from ihm import * # Importe l'interface utilisateur graphique
 
 # --- Évènement permanant
@@ -35,8 +34,13 @@ app.bind("<a>",lambda e:nextEnnemieMap(1)) # Passer de la carte du joueur advers
 
 app.bind("<F11>",lambda e:setFullScreen()) # Switch avec entre le pleine écrant et le fenêtré si F11 pressé
 
-app.after_idle(guiloop) # Lancement après ouverture de la fenêtre du rafraichissement d'élément de l'interface
-app.after_idle(refreshImg) # Lancement après ouverture de la fenêtre du rafraichissement d'images
+app.bind("<space>",lambda e:refreshGUI()) # Switch avec entre le pleine écrant et le fenêtré si F11 pressé
+
+app.bind("<Configure>",lambda e:windowResizeOn())
+
+app.after_idle(refreshGUIloop) # Lancement après ouverture de la fenêtre du rafraichissement d'élément de l'interface
+app.after_idle(refreshAllGUIloop) # Lancement après ouverture de la fenêtre du rafraichissement d'images
+app.after_idle(FPSloop)
 
 app.unbind_all("<<NextWindow>>") # Désactivation du focus car incompatible avec l'interface
 

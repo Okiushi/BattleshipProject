@@ -7,7 +7,7 @@ le lien de téléchargement pour PC est disponible ci-dessous :
 
 ## Note
 ### Fichier de lancement
-__controller.py__
+__launcher.py__
 
 ### Partie personalisé [BETA] :
 Le menu de personnalisation du jeu n'étant pas encore disponible, des présélections pré-créées sont disponibles :

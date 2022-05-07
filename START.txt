@@ -4,7 +4,7 @@ v0.2.2
 Un premier projet de Battleship Project Team
 
 LANCEUR:
-controller.py
+launcher.py
 
 REQUIS :
 Il est recommandé d'exécuter le fichier controller.py avec python 3.10.4 ou supérieur (et non un IDE), le lien de téléchargement pour PC est disponible ci-dessous :

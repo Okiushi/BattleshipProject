@@ -22,7 +22,6 @@ global ennemieMapSelect
 mapData = []
 atqHistory = []
 boatData = []
-allBoatType = ["a","c","f","s","p"]
 boatGuiData = []
 playerDeathData = []
 tmpAtqDone = []
@@ -99,12 +98,12 @@ def laucheGame():
     tmpAtqDone.clear()
     if playerMapSelect != 1:
         ennemieMapSelect = 1
-        ihm.textMaster.config(text="C'est au joueur "+str(strikerMap)+" de commencer",fg="grey")
+        ihm.textMaster.config(text=ihm.lg("Le joueur {} exécute ses tirs.").format(strikerMap),fg="grey")
         ihm.app.after(2000,ihm.refreshToure)
 
     else:
         ennemieMapSelect = 2
-        ihm.textMaster.config(text="Vous commencer",fg="black")
+        ihm.textMaster.config(text=ihm.lg("Veuillez exécuter vos tirs sur chaque flotte adverse."),fg="black")
         ihm.refreshToure()
 
 
@@ -188,6 +187,7 @@ def atq(user,map,posX,posY):
         mapData[map-1][posY-1][posX-1][1] = "X"+str(user)
         tmpAtqDone.append(map)
         atqDone = True
+        ihm.refreshGUImap()
         if len(tmpAtqDone) == playerDeathData.count(False) -1:
             allAtqDone = True
 
@@ -497,7 +497,7 @@ def loadSettings():
 
     ihm.lang = settings.get("settings").get("lang")
     ihm.fullScreen = settings.get("settings").get("fullScreen")
-    ihm.W  = settings.get("settings").get("W")
+    ihm.W = settings.get("settings").get("W")
     ihm.H = settings.get("settings").get("H")
     ihm.Hz = settings.get("settings").get("Hz")
     ihm.shakeIntensity = settings.get("settings").get("shakeIntensity")
@@ -507,9 +507,13 @@ def loadSettings():
     ihm.musicVolume = settings.get("settings").get("musicVolume")
     ihm.effectVolume = settings.get("settings").get("effectVolume")
 
+    ihm.app.attributes("-fullscreen", ihm.fullScreen)
 
 def applySettings():
     ihm.app.attributes("-fullscreen", ihm.fullScreen)
+    if ihm.restart:
+        ihm.app.destroy()
+        os.system("python controller.py")
 
 def saveSettings():
     settings ={
@@ -530,8 +534,3 @@ def saveSettings():
 
     with open("usersettings.json", 'w') as file:
         json.dump(settings, file)
-
-    ihm.app.attributes("-fullscreen", ihm.fullScreen)
-    if ihm.restart:
-        ihm.app.destroy()
-        os.system("start controller.py")

@@ -3,7 +3,6 @@
 # --- Importation des bibliothèque
 
 # Imporations des données
-from os import stat
 from data import *
 import data as d
 
@@ -34,9 +33,14 @@ except: # install le module s'il n'est pas présent
     os.system("python -m pip install magicsound")
     import magicsound
 
-# --- Affectation des variables
+from time import sleep
 
-app = tk.Tk()
+# --- Affectation des variables
+def appinit():
+    global app
+    app = tk.Tk()
+
+appinit()
 
 globalSize = 1
 buildBoatDirection = 1
@@ -49,6 +53,10 @@ shakeTime = 2
 shakeWindow = False
 page = ""
 restart = False
+fps = 0
+oneS = False
+menuTitleText = False
+windowResize = False
 
 # --- Réglage
 with open("usersettings.json", 'r') as file:
@@ -71,7 +79,7 @@ country = ["EN","FR","DE","ES","PT","JP","KR","CN"]
 with open("gui/lang/{}.txt".format(country[lang]), "r", encoding='utf-8') as lgFile:
     langFile = lgFile.readlines()
 
-# --- Page
+# --- y
 window = Frame(app)
 startPage = Canvas(window,bg="black",cursor="none")
 mainMenuPage = Canvas(window)
@@ -91,12 +99,16 @@ default_font = nametofont("TkDefaultFont")
 # Fonction d'action de fenêtre
 def switch(frame):
     global page
+    global backPage
     for widget in window.winfo_children():
         widget.place_forget()
     window.place(relx=0.5,x=0,rely=0.5,y=0,relheight=1,relwidth=1,anchor=CENTER)
     frame.place(relx=0.5,rely=0.5,relheight=1,relwidth=1,anchor=CENTER)
+    backPage = page
     page = frame
-    refreshGUI()
+    refreshAllGUI()
+    app.update()
+    refreshGUImap()
 
 # --- Gestion des images
 
@@ -124,16 +136,13 @@ img_X_Source = Image.open("gui/image/Status/X.png")
 img_D_Source = Image.open("gui/image/Status/D.png")
 
 # --- Rafraichissement de la taille des images (toute les secondes)
-def refreshImg():
-    if page == startPage:
+def refreshIMG():
+    if page == startPage: # Affichage uniquement quand nécaissaire par soucis de performance
         global img_Start_Screen # Écran de démarage
         img_Start_Screen = ImageTk.PhotoImage(img_Start_Screen_Source.resize((int((800*globalSize)),int((450*globalSize))), Image.ANTIALIAS))
 
-    if page == mainMenuPage or page == startPage:
-        global img_Title # Titre
-        img_Title = ImageTk.PhotoImage(img_Title_Source.resize((int((1080//2*globalSize)),int((300//2*globalSize))), Image.ANTIALIAS))
+    if page == partyPage or page == prePartyPage: # Affichage uniquement quand nécaissaire par soucis de performance
 
-    if page == partyPage or page == prePartyPage or page == startPage: # Affichage uniquement quand nécaissaire par soucis de performance
         global img_X
         img_X = ImageTk.PhotoImage(img_X_Source.resize((int((200//7*globalSize)/(d.mapSize/10)),int((200//7*globalSize)/(d.mapSize/10))), Image.ANTIALIAS))
         global img_D
@@ -154,8 +163,6 @@ def refreshImg():
         # Patrouilleur
         global img_Pboat_N; global img_Pboat_E; global img_Pboat_S; global img_Pboat_W
         img_Pboat_N = ImageTk.PhotoImage(img_Pboat_N_Source.resize((int((200//7*globalSize)/(d.mapSize/10)),int((400//7*globalSize)/(d.mapSize/10))), Image.ANTIALIAS)); img_Pboat_E = ImageTk.PhotoImage(img_Pboat_E_Source.resize((int((400//7*globalSize)/(d.mapSize/10)),int((200//7*globalSize)/(d.mapSize/10))), Image.ANTIALIAS)); img_Pboat_S = ImageTk.PhotoImage(img_Pboat_S_Source.resize((int((200//7*globalSize)/(d.mapSize/10)),int((400//7*globalSize)/(d.mapSize/10))), Image.ANTIALIAS)); img_Pboat_W = ImageTk.PhotoImage(img_Pboat_W_Source.resize((int((400//7*globalSize)/(d.mapSize/10)),int((200//7*globalSize)/(d.mapSize/10))), Image.ANTIALIAS))
-    refreshGUI()
-    app.after(1000,refreshImg) # Re-rafraichissement après une seconde
 
 #  --- Trouveur de l'image correspondante à un type de bateau et sa direction
 def finfBoatImg(type,direction):
@@ -165,22 +172,27 @@ def finfBoatImg(type,direction):
     if not isinstance(direction, int):
         direction = orientation.index(direction) 
     return globals()[imgName[typeList.index(type)]+"_"+orientation[direction]]
-
 ### --- Action de boutton --- ###
 
 def closeApp(): 
     if d.inGame:
-        if messagebox.askokcancel(lg("Battleship Warfare Alert"), lg("Êtes-vous sûr de vouloir quitter le jeu ? (Votre session en cours sera effacée)")): 
+        if messagebox.askokcancel(lg("Battleship Warfare Alert"), lg("Êtes-vous sûr de vouloir quitter le jeu ?")): 
             app.destroy()
     else:
         app.destroy()
 
-def leaveGame(): 
+def leaveGame():
     if d.inGame:
         if messagebox.askokcancel(lg("Battleship Warfare Alert"), lg("Êtes-vous sûr de vouloir abandonner ?")): 
             d.stopGame()
     else:
         d.stopGame()
+
+def FPSloop():
+    global fps
+    global Hz
+    fps = 0
+    app.after(1000,FPSloop)
 
 # Redimentionnement
 
@@ -194,6 +206,7 @@ def setFullScreen():
     app.attributes("-fullscreen", fullScreen) 
     globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
     refreshGUI()
+    refreshGUImap()
 
 def buttonSound(sound):
     try:
@@ -231,12 +244,12 @@ def nextEnnemieMap(select):
         d.ennemieMapSelect = 1
         if d.ennemieMapSelect == d.playerMapSelect:
             d.ennemieMapSelect += 1
-
     refreshGUI()
+    refreshGUImap()
 
 def refreshToure():
     if d.inGame:
-        # A un autre joureur de jouer
+        # A un autre joueur de jouer
         if d.allAtqDone:        
             d.allAtqDone = False
             d.atqDone = False
@@ -255,7 +268,6 @@ def refreshToure():
             if d.strikerMap != d.playerMapSelect and not d.playerDeathData[d.strikerMap-1]:
                 textMaster.config(text=lg("Le joueur {} exécute ses tirs.").format(d.strikerMap),fg="grey")
                 app.after(int(d.cooldown*500),refreshToure)
-                
 
             elif d.strikerMap == d.playerMapSelect and not d.playerDeathData[d.strikerMap-1]:
                 if d.mapNumber > 2:
@@ -263,7 +275,7 @@ def refreshToure():
                 else:
                     textMaster.config(text=lg("Veuillez exécuter vos tirs sur la flotte adverse."),fg="black")
                 refreshToure()
-        
+
         # Au toure d'un adversaire
         elif d.strikerMap != d.playerMapSelect and not d.playerDeathData[d.strikerMap-1]:
             ennemiPlay(d.strikerMap)
@@ -278,14 +290,14 @@ def refreshToure():
             d.allAtqDone = False
             d.atqDone = False
 
-        if d.playerDeathData[d.playerMapSelect-1]:
-            d.inGame = False
-            textMaster.config(text=lg("Échec de la mission, votre flotte a été anéanti !"),fg="red")
-        elif not d.playerDeathData[d.playerMapSelect-1] and d.playerDeathData.count(True) == d.mapNumber - 1:
-            d.inGame = False
-            textMaster.config(text=lg("Félicitation, vous avez anéanti la flotte ennemie !"),fg="green")
-    
         refreshGUI()
+
+    if d.playerDeathData[d.playerMapSelect-1]:
+        d.inGame = False
+        textMaster.config(text=lg("Échec de la mission, votre flotte a été anéanti !"),fg="red")
+    elif not d.playerDeathData[d.playerMapSelect-1] and d.playerDeathData.count(True) == d.mapNumber - 1:
+        d.inGame = False
+        textMaster.config(text=lg("Félicitation, vous avez anéanti la flotte ennemie !"),fg="green")
 
 def changeBoatDirection(event):
     global buildBoatDirection
@@ -304,28 +316,9 @@ def setInEnnemieMap(value):
     global inEnnemieMap
     inEnnemieMap = value
 
-def boatImgInMap(mapGui,map,hideBoat):
-    for i in range(len(boatGuiData[map-1])):
-        imgSelect = finfBoatImg(boatGuiData[map-1][i][0][0],boatGuiData[map-1][i][3])
-        if not hideBoat or hideBoat and mapRead(map,boatGuiData[map-1][i][1],boatGuiData[map-1][i][2])[1] == "DD":
-            if boatGuiData[map-1][i][0][0] == "c" or boatGuiData[map-1][i][0][0] == "p":
-                if boatGuiData[map-1][i][3] == "N":
-                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/d.mapSize))-(mapGui.winfo_width()/d.mapSize/2), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/d.mapSize))-(mapGui.winfo_height()/d.mapSize),image=imgSelect)
-                elif boatGuiData[map-1][i][3] == "E":
-                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/d.mapSize)), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/d.mapSize))-(mapGui.winfo_height()/d.mapSize/2),image=imgSelect)
-                elif boatGuiData[map-1][i][3] == "S":
-                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/d.mapSize))-(mapGui.winfo_width()/d.mapSize/2), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/d.mapSize)),image=imgSelect)
-                else:
-                    mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/d.mapSize))-(mapGui.winfo_width()/d.mapSize), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/d.mapSize))-(mapGui.winfo_height()/d.mapSize/2),image=imgSelect)
-            else:
-                mapGui.create_image((boatGuiData[map-1][i][1]*(mapGui.winfo_width()/d.mapSize))-(mapGui.winfo_width()/d.mapSize/2), (boatGuiData[map-1][i][2]*(mapGui.winfo_height()/d.mapSize))-(mapGui.winfo_height()/d.mapSize/2),image=imgSelect)
-
-    for x in range(d.mapSize):
-            for y in range(d.mapSize):
-                if mapRead(map,x+1,y+1)[1][0] == "X" and mapRead(map,x+1,y+1)[0] != "--":
-                    mapGui.create_image(((x+1)*(mapGui.winfo_width()/d.mapSize))-(mapGui.winfo_width()/d.mapSize/2), ((y+1)*(mapGui.winfo_height()/d.mapSize))-(mapGui.winfo_height()/d.mapSize/2),image=img_X)
-                if mapRead(map,x+1,y+1)[1] == "DD" :
-                    mapGui.create_image(((x+1)*(mapGui.winfo_width()/d.mapSize))-(mapGui.winfo_width()/d.mapSize/2), ((y+1)*(mapGui.winfo_height()/d.mapSize))-(mapGui.winfo_height()/d.mapSize/2),image=img_D)
+def windowResizeOn():
+    global windowResize
+    windowResize = True
 
 def boatSelect(type,direction,forceSelect):
     global buildBoatSelected
@@ -343,16 +336,20 @@ def boatSelect(type,direction,forceSelect):
         
     if type == "":
         magicsound.magicsound("gui/sound/Build/boatUnselected.wav",block = False)
+    refreshGUImap()
 
 # Gestion de la langue
 def lg(text):
-    with open("usersettings.json", 'r') as file:
-        settings = json.load(file)
-    with open("gui/lang/FR.txt", "r", encoding='utf-8') as lgFile:
-        frenchLangFile = lgFile.readlines()
-    with open("gui/lang/{}.txt".format(country[settings.get("settings").get("lang")]), "r", encoding='utf-8') as lgFile:
-        langFile = lgFile.readlines()
-    return langFile[frenchLangFile.index(text+"\n")][0:-1]
+    try:
+        with open("usersettings.json", 'r') as file:
+            settings = json.load(file)
+        with open("gui/lang/FR.txt", "r", encoding='utf-8') as lgFile:
+            frenchLangFile = lgFile.readlines()
+        with open("gui/lang/{}.txt".format(country[settings.get("settings").get("lang")]), "r", encoding='utf-8') as lgFile:
+            langFile = lgFile.readlines()
+        return langFile[frenchLangFile.index(text+"\n")][0:-1]
+    except:
+        return "[missing text]"
 
 def selectGameMode(mode):
     d.gameMode = mode
@@ -361,11 +358,13 @@ def selectGameMode(mode):
 def clickEnnemieMap(event):
     if d.mapNumber > 2 and d.ennemieMapSelect in d.tmpAtqDone and not d.playerDeathData[d.playerMapSelect-1]:
         textMaster.config(text=lg("Vous avez déjà tiré sur le joueur {}. Vous n'avez pas tiré sur {} flotte encore.").format(d.ennemieMapSelect,d.mapNumber-len(d.tmpAtqDone)-1),fg="red")
+        refreshGUImap()
         refreshToure()
-
+        
     if d.strikerMap == d.playerMapSelect and mapRead(d.ennemieMapSelect,event.x//(ennemieMap.winfo_width()//d.mapSize)+1,event.y//(ennemieMap.winfo_height()//d.mapSize)+1)[1][0] != "X" and not d.playerDeathData[d.ennemieMapSelect-1] and not d.playerDeathData[d.playerMapSelect-1] and not d.ennemieMapSelect in d.tmpAtqDone and not d.atqDone:
         atq(d.playerMapSelect,d.ennemieMapSelect,event.x//(ennemieMap.winfo_width()//d.mapSize)+1,event.y//(ennemieMap.winfo_height()//d.mapSize)+1)
         refreshGUI()
+        refreshGUImap()
         refreshToure()
 
 def clickBuild(event):
@@ -396,11 +395,25 @@ def clickBuild(event):
                 if boatGuiData[map-1][i][0] == type:
                     boatSelect(type[0],boatGuiData[map-1][i][3],True)
             removeBoat(map,type)
-
-def guiloop():
-    refreshGUI()
-    app.after(int((1/(Hz))*1000),guiloop)
+    refreshGUImap()
     
+
+def refreshGUIloop():
+    # Effet de tremblement de la fenêtre
+    if shakeWindow:
+        window.place(relx=0.5,x=randint(-shakeIntensity,shakeIntensity),rely=0.5,y=randint(-shakeIntensity,shakeIntensity),relheight=1,relwidth=1,anchor=CENTER)
+    global windowResize
+    if not windowResize:
+        refreshGUI()
+    app.after(int((1/(Hz))*1000),refreshGUIloop)
+
+def refreshAllGUIloop():
+    refreshAllGUI()
+    app.after(1000,refreshAllGUIloop)
+
+def refreshAllGUI():
+    refreshIMG()
+    refreshGUImap()
 
 # Lanement des tremblements de la fenêtre
 def shake(time):
@@ -419,18 +432,17 @@ def refreshGUI():
     global buildBoatDirection
     global shakeIntensity
     global shakeWindow
-    global mouseX
-    global mouseY
     global globalSize
     global restart
+    global fps
+
+    fps += 1
+
     globalSize = 1 + (app.winfo_height() - 450)*(app.winfo_width() - 800)*0.0000025
-    mouseX = app.winfo_pointerx() - app.winfo_rootx()
-    mouseY = app.winfo_pointery() - app.winfo_rooty()
-    lettre = "ABCDEFGHIJKLMNOPQRST"
 
     # AllPage
     titleStyle.configure(size=int(50*globalSize))
-    default_font.configure(family="Arial",size=int(11*(globalSize*0.45+0.55)),weight=BOLD)
+    default_font.configure(family="Arial",size=int(11*(globalSize*0.30+0.70)),weight=BOLD)
 
     if d.inGame:
         app.title("Battleship Warfare - In game")
@@ -445,10 +457,6 @@ def refreshGUI():
             text_selectGame.config(text=lg("Standard"))
             text_selectGame2.config(text=lg("Standard"))
 
-    # Effet de tremblement de la fenêtre
-    if shakeWindow:
-        window.place(relx=0.5,x=randint(-shakeIntensity,shakeIntensity),rely=0.5,y=randint(-shakeIntensity,shakeIntensity),relheight=1,relwidth=1,anchor=CENTER)
-
     # Start
     if page == startPage:
         startPage.delete("all")
@@ -456,10 +464,15 @@ def refreshGUI():
 
     # MainMenu
     if page == mainMenuPage:
-        mainMenuPage.delete("all")
-        global img_Title # Titre
-        img_Title = ImageTk.PhotoImage(img_Title_Source.resize((int((1080//2*globalSize)),int((300//2*globalSize))), Image.ANTIALIAS))
-        mainMenuPage.create_image(app.winfo_width()//2,app.winfo_height()//3,image=img_Title)
+
+        if not menuTitleText:
+            mainMenuPage.delete("all")
+            text_gameTitle.destroy()
+            global img_Title # Titre
+            img_Title = ImageTk.PhotoImage(img_Title_Source.resize((int((1080//2*globalSize)),int((300//2*globalSize))), Image.ANTIALIAS))
+            mainMenuPage.create_image(app.winfo_width()//2,app.winfo_height()//3,image=img_Title)
+        else:
+            text_gameTitle.place(relx = 0.5, rely = 0.45, anchor = S)
 
     # Settings
     if page == settingsPage:
@@ -486,13 +499,9 @@ def refreshGUI():
                 restart = False
         else:
             mainSettingsPage_button_apply.config(stat=DISABLED)
-        if d.inGame:
-            backPage = partyPage
-        else:
-            backPage = mainMenuPage
-
-        mainSettingsPage_button_apply.config(command=lambda:[d.saveSettings(),d.loadSettings(),d.applySettings(),switch(backPage),buttonSound(1)])
-        mainSettingsPage_button_back.config(command=lambda:[d.loadSettings(),d.applySettings(),switch(backPage),buttonSound(2)])
+            
+        mainSettingsPage_button_apply.config(command=lambda:[switch(backPage),d.saveSettings(),d.loadSettings(),d.applySettings(),buttonSound(1)])
+        mainSettingsPage_button_back.config(command=lambda:[switch(backPage),d.loadSettings(),buttonSound(2)])
 
     # GameSettings
     if page == gameSettingsPage:
@@ -512,66 +521,27 @@ def refreshGUI():
         else:
             boatBuildZone.config(cursor="arrow")
 
-        playerMapBuild.place(width = 300*globalSize, height = 300*globalSize,relx = 0.5, rely = 0.5, anchor = CENTER)
-
         boatBuildZone.delete("all")
-        playerMapBuild.delete("all")
+        playerMapBuild.delete(buildBoatSelected+"BoatSelect")
 
-        # Affichage des cases
-        cases = []
-        for i in range(d.mapSize):
-            cases_i=[]
-            for j in range(d.mapSize):
-                if mapRead(d.playerMapSelect,j+1,i+1)[0] != "--":
-                    caseColor="steelBlue3"
-                else:
-                    caseColor="steelBlue3" 
-                cases_i.append(playerMapBuild.create_rectangle((j*(playerMapBuild.winfo_width()/d.mapSize)), (i*(playerMapBuild.winfo_height()/d.mapSize)), ((j+1)*(playerMapBuild.winfo_width()/d.mapSize)-int(2*(globalSize*0.5+0.5))), ((i+1)*(playerMapBuild.winfo_height()/d.mapSize)-int(2*(globalSize*0.5+0.5))),outline=caseColor,fill=caseColor))
-            cases.append(cases_i)
+        selectForBuildBoat()
 
-        # Affichage des bateaux
-        boatImgInMap(playerMapBuild,d.playerMapSelect,False)
-
-        # Affichage des lettres
         if showLetter:
             for x in range(d.mapSize):
                 if inversLetter:
-                    boatBuildZone.create_text(boatBuildZone.winfo_width()//2-playerMapBuild.winfo_width()//2+playerMapBuild.winfo_width()/d.mapSize*(x+0.5),boatBuildZone.winfo_height()//2-playerMapBuild.winfo_height()//2-5*globalSize,text=lettre[x],fill="steelBlue4",anchor=S)
+                    boatBuildZone.create_text(boatBuildZone.winfo_width()//2-playerMapBuild.winfo_width()//2+playerMapBuild.winfo_width()/d.mapSize*(x+0.5),boatBuildZone.winfo_height()//2-playerMapBuild.winfo_height()//2-5*globalSize,text="ABCDEFGHIJKLMNOPQRST"[x],fill="steelBlue4",anchor=S)
                 else:
                     boatBuildZone.create_text(boatBuildZone.winfo_width()//2-playerMapBuild.winfo_width()//2+playerMapBuild.winfo_width()/d.mapSize*(x+0.5),boatBuildZone.winfo_height()//2-playerMapBuild.winfo_height()//2-5*globalSize,text=str(x+1),fill="steelBlue4",anchor=S)
             for y in range(d.mapSize):
                 if inversLetter:
                     boatBuildZone.create_text(boatBuildZone.winfo_width()//2-playerMapBuild.winfo_width()//2-10*globalSize,boatBuildZone.winfo_height()//2-playerMapBuild.winfo_height()//2+playerMapBuild.winfo_width()/d.mapSize*(y+0.5),text=str(y+1),fill="steelBlue4",anchor=E)
                 else:
-                    boatBuildZone.create_text(boatBuildZone.winfo_width()//2-playerMapBuild.winfo_width()//2-10*globalSize,boatBuildZone.winfo_height()//2-playerMapBuild.winfo_height()//2+playerMapBuild.winfo_width()/d.mapSize*(y+0.5),text=lettre[y],fill="steelBlue4",anchor=E)
-        
-        for type in range(len(allBoatType)):
-            if buildBoatSelected == allBoatType[type]:
-                imgSelect = finfBoatImg(allBoatType[type],buildBoatDirection)
+                    boatBuildZone.create_text(boatBuildZone.winfo_width()//2-playerMapBuild.winfo_width()//2-10*globalSize,boatBuildZone.winfo_height()//2-playerMapBuild.winfo_height()//2+playerMapBuild.winfo_width()/d.mapSize*(y+0.5),text="ABCDEFGHIJKLMNOPQRST"[y],fill="steelBlue4",anchor=E)
+
+            if len(boatData[d.playerMapSelect-1]) == len(d.gameDataBoat) :
+                button_launchGame.config(state=ACTIVE)
             else:
-                imgSelect = finfBoatImg(allBoatType[type],1)
-            
-            if buildBoatSelected == allBoatType[type] and boatDataTypeCount(allBoatType[type],d.playerMapSelect) != d.gameDataBoat.count(allBoatType[type]):
-                if inBuildMap:
-                    if buildBoatSelected == "c" or buildBoatSelected == "p":
-                        if buildBoatDirection == 0 or buildBoatDirection == 2:
-                            playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//d.mapSize))*(playerMapBuild.winfo_width()//d.mapSize))+((playerMapBuild.winfo_width()//d.mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//d.mapSize))*(playerMapBuild.winfo_height()//d.mapSize))+((playerMapBuild.winfo_height()//d.mapSize)),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
-                        else:
-                            playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//d.mapSize))*(playerMapBuild.winfo_width()//d.mapSize))+((playerMapBuild.winfo_width()//d.mapSize)), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//d.mapSize))*(playerMapBuild.winfo_height()//d.mapSize))+((playerMapBuild.winfo_height()//d.mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
-                    else:
-                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//d.mapSize))*(playerMapBuild.winfo_width()//d.mapSize))+((playerMapBuild.winfo_width()//d.mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//d.mapSize))*(playerMapBuild.winfo_height()//d.mapSize))+((playerMapBuild.winfo_height()//d.mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
-                else:
-                    boatBuildZone.create_image(mouseX,mouseY,image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
-
-            elif buildBoatSelected != allBoatType[type] and boatDataTypeCount(allBoatType[type],d.playerMapSelect) != d.gameDataBoat.count(allBoatType[type]):
-                boatBuildZone.create_image(app.winfo_width()//7,app.winfo_height()//8+app.winfo_height()//8*(type+1),image=imgSelect,tags=str(allBoatType[type])+"Boat")
-        
-        boatBuildZone.tag_raise(buildBoatSelected+"BoatSelect")
-
-        if len(boatData[d.playerMapSelect-1]) == len(d.gameDataBoat) :
-            button_launchGame.config(state=ACTIVE)
-        else:
-            button_launchGame.config(state=DISABLED)
+                button_launchGame.config(state=DISABLED)
 
     # Party
     if page == partyPage:
@@ -581,82 +551,10 @@ def refreshGUI():
         else:
             button_backToMainMenu.config(text=lg("Menu principal"))
 
-        # Affichage de la grille de l'utilisateur
-        playerMap.place(width = 300*globalSize, height = 300*globalSize,relx = 0.5, rely = 0.5, anchor = CENTER)
-        mapZoneUser.delete("all")
-        playerMap.delete("all")
-        cases = []
-        for i in range(d.mapSize):
-            cases_i=[]
-            for j in range(d.mapSize):
-                if mapRead(d.playerMapSelect,j+1,i+1)[1] == "DD":
-                    caseColor="steelBlue3"
-                elif mapRead(d.playerMapSelect,j+1,i+1)[0] != "--" and mapRead(d.playerMapSelect,j+1,i+1)[1][0] == "X":
-                    caseColor="steelBlue3"
-                elif mapRead(d.playerMapSelect,j+1,i+1)[0] == "--" and mapRead(d.playerMapSelect,j+1,i+1)[1][0] == "X":
-                    caseColor="steelblue"
-                else:
-                    caseColor="steelBlue3"
-                cases_i.append(playerMap.create_rectangle((j*(playerMap.winfo_width()/d.mapSize)), (i*(playerMap.winfo_height()/d.mapSize)), ((j+1)*(playerMap.winfo_width()/d.mapSize)-int(2*(globalSize*0.5+0.5))), ((i+1)*(playerMap.winfo_height()/d.mapSize)-int(2*(globalSize*0.5+0.5))),outline=caseColor,fill=caseColor))
-            cases.append(cases_i)
-
-        # Affichage des bateau dans la map de l'utilisateur
-        boatImgInMap(playerMap,d.playerMapSelect,False)
-
-        # Affichage des lettres
-        if showLetter:
-            for x in range(d.mapSize):
-                if inversLetter:
-                    mapZoneUser.create_text(mapZoneUser.winfo_width()//2-playerMap.winfo_width()//2+playerMap.winfo_width()/d.mapSize*(x+0.5),mapZoneUser.winfo_height()//2-playerMap.winfo_height()//2-5*globalSize,text=lettre[x],fill="steelBlue4",anchor=S)
-                else:
-                    mapZoneUser.create_text(mapZoneUser.winfo_width()//2-playerMap.winfo_width()//2+playerMap.winfo_width()/d.mapSize*(x+0.5),mapZoneUser.winfo_height()//2-playerMap.winfo_height()//2-5*globalSize,text=str(x+1),fill="steelBlue4",anchor=S)
-            for y in range(d.mapSize):
-                if inversLetter:
-                    mapZoneUser.create_text(mapZoneUser.winfo_width()//2-playerMap.winfo_width()//2-10*globalSize,mapZoneUser.winfo_height()//2-playerMap.winfo_height()//2+playerMap.winfo_width()/d.mapSize*(y+0.5),text=str(y+1),fill="steelBlue4",anchor=E)
-                else:
-                    mapZoneUser.create_text(mapZoneUser.winfo_width()//2-playerMap.winfo_width()//2-10*globalSize,mapZoneUser.winfo_height()//2-playerMap.winfo_height()//2+playerMap.winfo_width()/d.mapSize*(y+0.5),text=lettre[y],fill="steelBlue4",anchor=E)
-
-        # Affichage de la grille de l'adversaire
-        ennemieMap.place(width = 300*globalSize, height = 300*globalSize,relx = 0.5, rely = 0.5, anchor = CENTER)
         if d.strikerMap == d.playerMapSelect and not d.ennemieMapSelect in d.tmpAtqDone:
             ennemieMap.config(cursor="crosshair")
         else:
             ennemieMap.config(cursor="arrow")
-        mapZoneEnnemie.delete("all")
-        ennemieMap.delete("all")
-        cases = []
-        for i in range(d.mapSize):
-            cases_i=[]
-            for j in range(d.mapSize):
-                if mapRead(d.ennemieMapSelect,j+1,i+1)[1] == "DD":
-                    caseColor="steelBlue3"
-                elif mapRead(d.ennemieMapSelect,j+1,i+1)[0] != "--" and mapRead(d.ennemieMapSelect,j+1,i+1)[1][0] == "X":
-                    caseColor="steelBlue3"
-                elif mapRead(d.ennemieMapSelect,j+1,i+1)[0] == "--" and mapRead(d.ennemieMapSelect,j+1,i+1)[1][0] == "X":
-                    caseColor="steelblue"
-                else:
-                    caseColor="steelBlue3"
-                if d.strikerMap == d.playerMapSelect and d.ennemieMapSelect and playerDeathData[d.ennemieMapSelect -1] == False and not playerDeathData[d.playerMapSelect-1] and mapRead(d.ennemieMapSelect,j+1,i+1)[1] == "--" and not d.ennemieMapSelect in d.tmpAtqDone and not d.atqDone:
-                    cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/d.mapSize)), (i*(ennemieMap.winfo_height()/d.mapSize)), ((j+1)*(ennemieMap.winfo_width()/d.mapSize)-int(2*(globalSize*0.5+0.5))), ((i+1)*(ennemieMap.winfo_height()/d.mapSize)-int(2*(globalSize*0.5+0.5))),outline=caseColor,activeoutline="white",fill=caseColor,activewidth=1*globalSize))
-                else:
-                    cases_i.append(ennemieMap.create_rectangle((j*(ennemieMap.winfo_width()/d.mapSize)), (i*(ennemieMap.winfo_height()/d.mapSize)), ((j+1)*(ennemieMap.winfo_width()/d.mapSize)-int(2*(globalSize*0.5+0.5))), ((i+1)*(ennemieMap.winfo_height()/d.mapSize)-int(2*(globalSize*0.5+0.5))),outline=caseColor,fill=caseColor))
-            cases.append(cases_i)
-
-        # Affichage des bateau dans la map de l'adversaire
-        boatImgInMap(ennemieMap,d.ennemieMapSelect,True)
-
-        # Affichage des lettres
-        if showLetter:
-            for x in range(d.mapSize):
-                if inversLetter:
-                    mapZoneEnnemie.create_text(mapZoneEnnemie.winfo_width()//2-ennemieMap.winfo_width()//2+ennemieMap.winfo_width()/d.mapSize*(x+0.5),mapZoneEnnemie.winfo_height()//2-ennemieMap.winfo_height()//2-5*globalSize,text=lettre[x],fill="steelBlue4",anchor=S)
-                else:
-                    mapZoneEnnemie.create_text(mapZoneEnnemie.winfo_width()//2-ennemieMap.winfo_width()//2+ennemieMap.winfo_width()/d.mapSize*(x+0.5),mapZoneEnnemie.winfo_height()//2-ennemieMap.winfo_height()//2-5*globalSize,text=str(x+1),fill="steelBlue4",anchor=S)
-            for y in range(d.mapSize):
-                if inversLetter:
-                    mapZoneEnnemie.create_text(mapZoneEnnemie.winfo_width()//2-ennemieMap.winfo_width()//2-10*globalSize,mapZoneEnnemie.winfo_height()//2-ennemieMap.winfo_height()//2+ennemieMap.winfo_width()/d.mapSize*(y+0.5),text=str(y+1),fill="steelBlue4",anchor=E)
-                else:
-                    mapZoneEnnemie.create_text(mapZoneEnnemie.winfo_width()//2-ennemieMap.winfo_width()//2-10*globalSize,mapZoneEnnemie.winfo_height()//2-ennemieMap.winfo_height()//2+ennemieMap.winfo_width()/d.mapSize*(y+0.5),text=lettre[y],fill="steelBlue4",anchor=E)
 
         if d.playerDeathData[d.ennemieMapSelect-1] == True:
             ennemieName.config(text="Player "+str(d.ennemieMapSelect),fg="red")
@@ -686,10 +584,101 @@ def refreshGUI():
             button_nextMap.place_forget()
             button_backMap.place_forget()
 
-# text_gameTitle = Label(mainMenuPage,text="BATTLESHIP WARFARE",fg="black",font=titleStyle)
-# text_gameTitle.place(relx = 0.5, rely = 0.45, anchor = S)
+def selectForBuildBoat():
+    allBoatType = ["a","c","f","s","p"]
+    for type in range(len(allBoatType)):
+            if buildBoatSelected == allBoatType[type]:
+                imgSelect = finfBoatImg(allBoatType[type],buildBoatDirection)
+            else:
+                imgSelect = finfBoatImg(allBoatType[type],1)
 
-button_play = ttk.Button(mainMenuPage, text=lg("Jouer"),command=lambda:[switch(selectPartyPage),buttonSound(1)],takefocus = 0)
+            if buildBoatSelected == allBoatType[type] and boatDataTypeCount(allBoatType[type],d.playerMapSelect) != d.gameDataBoat.count(allBoatType[type]):
+                if inBuildMap:
+                    if buildBoatSelected == "c" or buildBoatSelected == "p":
+                        if buildBoatDirection == 0 or buildBoatDirection == 2:
+                            playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//d.mapSize))*(playerMapBuild.winfo_width()//d.mapSize))+((playerMapBuild.winfo_width()//d.mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//d.mapSize))*(playerMapBuild.winfo_height()//d.mapSize))+((playerMapBuild.winfo_height()//d.mapSize)),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+                        else:
+                            playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//d.mapSize))*(playerMapBuild.winfo_width()//d.mapSize))+((playerMapBuild.winfo_width()//d.mapSize)), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//d.mapSize))*(playerMapBuild.winfo_height()//d.mapSize))+((playerMapBuild.winfo_height()//d.mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+                    else:
+                        playerMapBuild.create_image((((playerMapBuild.winfo_pointerx() - playerMapBuild.winfo_rootx())//(playerMapBuild.winfo_width()//d.mapSize))*(playerMapBuild.winfo_width()//d.mapSize))+((playerMapBuild.winfo_width()//d.mapSize)//2), (((playerMapBuild.winfo_pointery() - playerMapBuild.winfo_rooty())//(playerMapBuild.winfo_height()//d.mapSize))*(playerMapBuild.winfo_height()//d.mapSize))+((playerMapBuild.winfo_height()//d.mapSize)//2),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+                else:
+                    boatBuildZone.create_image(app.winfo_pointerx() - app.winfo_rootx(),app.winfo_pointery() - app.winfo_rooty(),image=imgSelect,tags=str(allBoatType[type])+"BoatSelect")
+
+            elif buildBoatSelected != allBoatType[type] and boatDataTypeCount(allBoatType[type],d.playerMapSelect) != d.gameDataBoat.count(allBoatType[type]):
+                boatBuildZone.create_image(app.winfo_width()//7,app.winfo_height()//8+app.winfo_height()//8*(type+1),image=imgSelect,tags=str(allBoatType[type])+"Boat")
+        
+    boatBuildZone.tag_raise(buildBoatSelected+"BoatSelect")
+
+def refreshGUImap():
+    global windowResize
+    if windowResize:
+        windowResize = False
+    if page == prePartyPage:
+        refreshOnlyGUImap(boatBuildZone,playerMapBuild,d.playerMapSelect,False)
+    if page == partyPage:
+        refreshOnlyGUImap(mapZoneUser,playerMap,d.playerMapSelect,False)
+        refreshOnlyGUImap(mapZoneEnnemie,ennemieMap,d.ennemieMapSelect,True)
+
+def refreshOnlyGUImap(globalContenter,mapContener,map,ennemie):
+    mapContener.place(width = 300*globalSize, height = 300*globalSize,relx = 0.5, rely = 0.5, anchor = CENTER) # Redimensionement de la grille
+    globalContenter.delete("all")
+    mapContener.delete("all")
+    # Construction de la grille
+    cases = []
+    for i in range(d.mapSize):
+        cases_i=[]
+        for j in range(d.mapSize):
+            if d.mapRead(map,j+1,i+1)[1] == "DD":
+                caseColor="steelBlue3"
+            elif d.mapRead(map,j+1,i+1)[0] != "--" and d.mapRead(map,j+1,i+1)[1][0] == "X":
+                caseColor="steelBlue3"
+            elif d.mapRead(map,j+1,i+1)[0] == "--" and d.mapRead(map,j+1,i+1)[1][0] == "X":
+                caseColor="steelblue"
+            else:
+                caseColor="steelBlue3"
+            if ennemie and (d.strikerMap == d.playerMapSelect and d.ennemieMapSelect and playerDeathData[d.ennemieMapSelect-1] == False and not playerDeathData[d.playerMapSelect-1] and d.mapRead(d.ennemieMapSelect,j+1,i+1)[1] == "--" and not d.ennemieMapSelect in d.tmpAtqDone and not d.atqDone):
+                cases_i.append(mapContener.create_rectangle((j*(mapContener.winfo_width()/d.mapSize)), (i*(mapContener.winfo_height()/d.mapSize)), ((j+1)*(mapContener.winfo_width()/d.mapSize)-int(2*(globalSize*0.5+0.5))), ((i+1)*(ennemieMap.winfo_height()/d.mapSize)-int(2*(globalSize*0.5+0.5))),outline=caseColor,activeoutline="white",fill=caseColor,activewidth=1*globalSize))
+            else:
+                cases_i.append(mapContener.create_rectangle((j*(mapContener.winfo_width()/d.mapSize)), (i*(mapContener.winfo_height()/d.mapSize)), ((j+1)*(mapContener.winfo_width()/d.mapSize)-int(2*(globalSize*0.5+0.5))), ((i+1)*(mapContener.winfo_height()/d.mapSize)-int(2*(globalSize*0.5+0.5))),outline=caseColor,fill=caseColor))
+        cases.append(cases_i)
+    # Affichage des images de bateaux
+    for i in range(len(boatGuiData[map-1])):
+        imgSelect = finfBoatImg(boatGuiData[map-1][i][0][0],boatGuiData[map-1][i][3])
+        if not ennemie or ennemie and d.mapRead(map,boatGuiData[map-1][i][1],boatGuiData[map-1][i][2])[1] == "DD":
+            if boatGuiData[map-1][i][0][0] == "c" or boatGuiData[map-1][i][0][0] == "p":
+                if boatGuiData[map-1][i][3] == "N":
+                    mapContener.create_image((boatGuiData[map-1][i][1]*(mapContener.winfo_width()/d.mapSize))-(mapContener.winfo_width()/d.mapSize/2), (boatGuiData[map-1][i][2]*(mapContener.winfo_height()/d.mapSize))-(mapContener.winfo_height()/d.mapSize),image=imgSelect)
+                elif boatGuiData[map-1][i][3] == "E":
+                    mapContener.create_image((boatGuiData[map-1][i][1]*(mapContener.winfo_width()/d.mapSize)), (boatGuiData[map-1][i][2]*(mapContener.winfo_height()/d.mapSize))-(mapContener.winfo_height()/d.mapSize/2),image=imgSelect)
+                elif boatGuiData[map-1][i][3] == "S":
+                    mapContener.create_image((boatGuiData[map-1][i][1]*(mapContener.winfo_width()/d.mapSize))-(mapContener.winfo_width()/d.mapSize/2), (boatGuiData[map-1][i][2]*(mapContener.winfo_height()/d.mapSize)),image=imgSelect)
+                else:
+                    mapContener.create_image((boatGuiData[map-1][i][1]*(mapContener.winfo_width()/d.mapSize))-(mapContener.winfo_width()/d.mapSize), (boatGuiData[map-1][i][2]*(mapContener.winfo_height()/d.mapSize))-(mapContener.winfo_height()/d.mapSize/2),image=imgSelect)
+            else:
+                mapContener.create_image((boatGuiData[map-1][i][1]*(mapContener.winfo_width()/d.mapSize))-(mapContener.winfo_width()/d.mapSize/2), (boatGuiData[map-1][i][2]*(mapContener.winfo_height()/d.mapSize))-(mapContener.winfo_height()/d.mapSize/2),image=imgSelect)
+    # Affichage des icones de status
+    for x in range(d.mapSize):
+        for y in range(d.mapSize):
+            if d.mapRead(map,x+1,y+1)[1][0] == "X" and d.mapRead(map,x+1,y+1)[0] != "--":
+                mapContener.create_image(((x+1)*(mapContener.winfo_width()/d.mapSize))-(mapContener.winfo_width()/d.mapSize/2), ((y+1)*(mapContener.winfo_height()/d.mapSize))-(mapContener.winfo_height()/d.mapSize/2),image=img_X)
+            if d.mapRead(map,x+1,y+1)[1] == "DD" :
+                mapContener.create_image(((x+1)*(mapContener.winfo_width()/d.mapSize))-(mapContener.winfo_width()/d.mapSize/2), ((y+1)*(mapContener.winfo_height()/d.mapSize))-(mapContener.winfo_height()/d.mapSize/2),image=img_D)
+    # Affichage des lettres
+    if showLetter:
+        for x in range(d.mapSize):
+            if inversLetter:
+                globalContenter.create_text(globalContenter.winfo_width()//2-playerMap.winfo_width()//2+playerMap.winfo_width()/d.mapSize*(x+0.5),globalContenter.winfo_height()//2-playerMap.winfo_height()//2-5*globalSize,text="ABCDEFGHIJKLMNOPQRST"[x],fill="steelBlue4",anchor=S)
+            else:
+                globalContenter.create_text(globalContenter.winfo_width()//2-playerMap.winfo_width()//2+playerMap.winfo_width()/d.mapSize*(x+0.5),globalContenter.winfo_height()//2-playerMap.winfo_height()//2-5*globalSize,text=str(x+1),fill="steelBlue4",anchor=S)
+        for y in range(d.mapSize):
+            if inversLetter:
+                globalContenter.create_text(globalContenter.winfo_width()//2-playerMap.winfo_width()//2-10*globalSize,globalContenter.winfo_height()//2-playerMap.winfo_height()//2+playerMap.winfo_width()/d.mapSize*(y+0.5),text=str(y+1),fill="steelBlue4",anchor=E)
+            else:
+                globalContenter.create_text(globalContenter.winfo_width()//2-playerMap.winfo_width()//2-10*globalSize,globalContenter.winfo_height()//2-playerMap.winfo_height()//2+playerMap.winfo_width()/d.mapSize*(y+0.5),text="ABCDEFGHIJKLMNOPQRST"[y],fill="steelBlue4",anchor=E)
+
+text_gameTitle = Label(mainMenuPage,text="BATTLESHIP WARFARE",fg="black",font=titleStyle)
+
+button_play = ttk.Button(mainMenuPage, text=lg("Jouer"),command=lambda:[switch(prePartyPage),selectGameMode(0),creatmap(),buttonSound(1)],takefocus = 0)
 button_play.place(height=20,relheight=0.05,relwidth=0.25,relx = 0.5, rely = 0.6,y=-20, anchor = CENTER)
 
 button_settings = ttk.Button(mainMenuPage, text=lg("Réglage"),command=lambda:[switch(settingsPage),buttonSound(1)],takefocus = 0)
@@ -701,7 +690,7 @@ button_credit.place(height=20,relheight=0.05, relwidth=0.25,relx = 0.5, rely = 0
 button_exit = ttk.Button(mainMenuPage, text=lg("Quitter"),command=lambda:app.destroy(),takefocus = 0)
 button_exit.place(height=15,relheight=0.05, relwidth=0.1,relx=1,rely=1,x=-10,y=-10,anchor = SE)
 
-mainMenuPage_label = Label(mainMenuPage, text="v 0.2.3",fg="grey70")
+mainMenuPage_label = Label(mainMenuPage, text="v0.2.4",fg="grey70")
 mainMenuPage_label.place(height=15,relheight=0.05, relwidth=0.1,rely=1,x=2,y=-2,anchor = SW)
 
 # Settings
@@ -780,13 +769,13 @@ playerMapBuild = Canvas(boatBuildZone,bg="steelBlue1")
 text_selectGame = Label(prePartyPage,fg="black")
 text_selectGame.place(width=100,relheight=0.075,relwidth=0.1,relx = 0.5, rely = 0, anchor = N)
 
-button_back = ttk.Button(prePartyPage, text=lg("Retour"),command=lambda:[switch(selectPartyPage),buttonSound(2)],takefocus = 0)
+button_back = ttk.Button(prePartyPage, text=lg("Retour"),command=lambda:[switch(backPage),buttonSound(2)],takefocus = 0)
 button_back.place(height=30,width=50,relheight=0.025,relwidth=0.05,relx=0,rely=1,x=10,y=-10,anchor = SW)
 
 button_launchGame = ttk.Button(prePartyPage, text=lg("/// LANCER ///"),command=lambda:[d.laucheGame(),buttonSound(1)],takefocus = 0)
 button_launchGame.place(height=50,width=100,relheight=0.05,relwidth=0.15,relx=1,rely=1,x=-10,y=-10,anchor = SE)
 
-button_creatyRandomMap = ttk.Button(prePartyPage, text=lg("Aléatoire"),command=lambda:[creatmap(),creatRandomMap(d.playerMapSelect),buttonSound(3)],takefocus = 0)
+button_creatyRandomMap = ttk.Button(prePartyPage, text=lg("Aléatoire"),command=lambda:[creatmap(),creatRandomMap(d.playerMapSelect),buttonSound(3),refreshGUImap()],takefocus = 0)
 button_creatyRandomMap.place(height=30,width=100,relheight=0.025,relwidth=0.15,relx=1,rely=0.95,x=-10,y=-65,anchor = SE)
 
 # Party
@@ -811,7 +800,7 @@ button_backToMainMenu.place(height=30,width=75,relheight=0.025,relwidth=0.1,relx
 
 ennemieName = Label(mapZoneEnnemie)
 
-button_nextMap = ttk.Button(mapZoneEnnemie, text="Player "+str(ennemieMapSelect+1),command=lambda:[nextEnnemieMap(1),buttonSound(3)],takefocus = 0)
+button_nextMap = ttk.Button(mapZoneEnnemie, text="Player "+str(d.ennemieMapSelect+1),command=lambda:[nextEnnemieMap(1),buttonSound(3)],takefocus = 0)
 button_backMap = ttk.Button(mapZoneEnnemie, text="Player "+str(d.ennemieMapSelect-1),command=lambda:[nextEnnemieMap(0),buttonSound(3)],takefocus = 0)
 
 ### --- Main execution --- ###
@@ -826,5 +815,5 @@ def ihmStart():
     creatmap()
     # Ouverture du menu
     switch(startPage)
-    app.after(3000,lambda:switch(mainMenuPage))
-    magicsound.magicsound('gui/sound/StartScreen/StartScreen.mp3',block = False)
+    app.after(3,lambda:switch(mainMenuPage))
+    # magicsound.magicsound('gui/sound/StartScreen/StartScreen.mp3',block = False)
